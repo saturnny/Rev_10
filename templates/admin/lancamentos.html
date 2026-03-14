@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Lançamentos da Equipe - {{ user.nome }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2>Lançamentos da Equipe</h2>
+    </div>
+
+    <!-- Filtros -->
+    <form method="get" class="filters">
+        <div class="form-group">
+            <label for="user_id">Usuário:</label>
+            <select id="user_id" name="user_id" class="form-control">
+                <option value="">Todos os usuários</option>
+                {% for usuario in usuarios %}
+                <option value="{{ usuario.id }}" {% if filtro_user_id == usuario.id %}selected{% endif %}>
+                    {{ usuario.nome }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="data">Data:</label>
+            <input type="date" id="data" name="data" class="form-control" value="{{ filtro_data or '' }}">
+        </div>
+
+        <div class="form-group" style="display: flex; align-items: flex-end;">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+            <a href="/admin/lancamentos" class="btn btn-secondary" style="margin-left: 0.5rem;">Limpar</a>
+        </div>
+    </form>
+
+    {% if lancamentos %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Usuário</th>
+                <th>Data</th>
+                <th>Início</th>
+                <th>Fim</th>
+                <th>Atividade</th>
+                <th>Observação</th>
+                <th>Horas</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for lancamento in lancamentos %}
+            <tr>
+                <td>{{ lancamento.usuario.nome }}</td>
+                <td>{{ lancamento.data.strftime('%d/%m/%Y') }}</td>
+                <td>{{ lancamento.hora_inicio.strftime('%H:%M') }}</td>
+                <td>{{ lancamento.hora_fim.strftime('%H:%M') }}</td>
+                <td>{{ lancamento.atividade.nome }}</td>
+                <td>{{ lancamento.observacao or '-' }}</td>
+                <td>{{ "%.1f"|format(lancamento.duracao_horas) }}h</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <div style="margin-top: 2rem; padding: 1rem; background-color: #f8f9fa; border-radius: 5px;">
+        <h4>Resumo</h4>
+        <p><strong>Total de Lançamentos:</strong> {{ lancamentos|length }}</p>
+        <p><strong>Total de Horas:</strong> {{ "%.1f"|format(lancamentos|sum(attribute='duracao_horas')) }}h</p>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 2rem; color: #666;">
+        <p>Nenhum lançamento encontrado com os filtros selecionados.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

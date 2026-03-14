@@ -1,0 +1,376 @@
+{% extends "base_bootstrap.html" %}
+
+{% block title %}Gerenciar Usuários - {{ user.nome }}{% endblock %}
+
+{% block header %}
+<div class="topbar">
+    <div class="topbar-title">
+        <h1>Gerenciamento de Usuários</h1>
+        <p>Administre os usuários do sistema</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#userModal">
+            <i class="bi bi-person-plus me-1"></i>
+            Novo Usuário
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">
+            <i class="bi bi-funnel me-2"></i>
+            Filtros
+        </h5>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <input type="text" class="form-control" placeholder="Buscar por nome ou email" id="searchInput">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="typeFilter">
+                    <option value="">Todos os tipos</option>
+                    <option value="Admin">Administrador</option>
+                    <option value="Usuario">Usuário</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="statusFilter">
+                    <option value="">Todos os status</option>
+                    <option value="true">Ativos</option>
+                    <option value="false">Inativos</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                    <i class="bi bi-x-circle me-1"></i>
+                    Limpar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">
+            <i class="bi bi-people me-2"></i>
+            Usuários Cadastrados
+        </h2>
+        <p class="card-description">{{ usuarios|length }} usuários encontrados</p>
+    </div>
+
+    {% if usuarios %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle" id="usersTable">
+            <thead>
+                <tr>
+                    <th><i class="bi bi-person me-1"></i>Usuário</th>
+                    <th><i class="bi bi-envelope me-1"></i>Email</th>
+                    <th><i class="bi bi-briefcase me-1"></i>Gestão</th>
+                    <th><i class="bi bi-geo-alt me-1"></i>Área</th>
+                    <th><i class="bi bi-people me-1"></i>Equipe</th>
+                    <th><i class="bi bi-award me-1"></i>Especialidade</th>
+                    <th><i class="bi bi-shield me-1"></i>Tipo</th>
+                    <th><i class="bi bi-toggle-on me-1"></i>Status</th>
+                    <th style="width: 150px;"><i class="bi bi-gear me-1"></i>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for usuario in usuarios %}
+                <tr class="user-row" data-name="{{ usuario.nome|lower }}" data-email="{{ usuario.email|lower }}" 
+                    data-type="{{ usuario.tipo_usuario }}" data-status="{{ usuario.ativo|lower }}">
+                    <td>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="avatar avatar-sm bg-primary">{{ usuario.nome[:2].upper() }}</div>
+                            <div>
+                                <div class="fw-semibold">{{ usuario.nome }}</div>
+                                <small class="text-muted">ID: {{ usuario.id }}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ usuario.email }}</td>
+                    <td>{{ usuario.gestao or '-' }}</td>
+                    <td>{{ usuario.area or '-' }}</td>
+                    <td>{{ usuario.equipe or '-' }}</td>
+                    <td>{{ usuario.especialidade or '-' }}</td>
+                    <td>
+                        <span class="badge bg-{{ 'warning' if usuario.tipo_usuario == 'Admin' else 'secondary' }}">
+                            {{ usuario.tipo_usuario }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge bg-{{ 'success' if usuario.ativo else 'danger' }}">
+                            <i class="bi bi-{{ 'check-circle' if usuario.ativo else 'x-circle' }} me-1"></i>
+                            {% if usuario.ativo %}Ativo{% else %}Inativo{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-sm btn-outline-primary" 
+                                    onclick="editUser({{ usuario.id }})"
+                                    data-bs-toggle="tooltip" 
+                                    data-bs-placement="top" 
+                                    title="Editar usuário">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            {% if usuario.id != user.id %}
+                            <button class="btn btn-sm btn-outline-{{ 'danger' if usuario.ativo else 'success' }}" 
+                                    onclick="toggleUserStatus({{ usuario.id }}, {{ 'false' if usuario.ativo else 'true' }})"
+                                    data-bs-toggle="tooltip" 
+                                    data-bs-placement="top" 
+                                    title="{% if usuario.ativo %}Desativar{% else %}Ativar{% endif %} usuário">
+                                <i class="bi bi-{{ 'pause' if usuario.ativo else 'play' }}"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" 
+                                    onclick="deleteUser({{ usuario.id }})"
+                                    data-bs-toggle="tooltip" 
+                                    data-bs-placement="top" 
+                                    title="Excluir usuário">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="card-footer">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <span class="badge bg-secondary me-2">
+                    <i class="bi bi-people me-1"></i>
+                    {{ usuarios|selectattr('tipo_usuario', 'equalto', 'Admin')|list|length }} administradores
+                </span>
+                <span class="badge bg-secondary me-2">
+                    <i class="bi bi-person me-1"></i>
+                    {{ usuarios|selectattr('tipo_usuario', 'equalto', 'Usuario')|list|length }} usuários comuns
+                </span>
+                <span class="badge bg-success">
+                    <i class="bi bi-check-circle me-1"></i>
+                    {{ usuarios|selectattr('ativo')|list|length }} ativos
+                </span>
+            </div>
+            <div>
+                <button class="btn btn-outline-secondary" onclick="exportUsers()">
+                    <i class="bi bi-download me-1"></i>
+                    Exportar
+                </button>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card-body text-center py-5">
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="bi bi-people" style="font-size: 48px; color: var(--bs-secondary);"></i>
+            </div>
+            <div class="empty-state-title">Nenhum usuário encontrado</div>
+            <div class="empty-state-description">
+                Comece adicionando um novo usuário ao sistema.
+            </div>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#userModal">
+                <i class="bi bi-person-plus me-1"></i>
+                Adicionar Primeiro Usuário
+            </button>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- User Modal -->
+<div class="modal fade" id="userModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-person-plus me-2"></i>
+                    <span id="userModalTitle">Novo Usuário</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <form id="userForm" method="post">
+                <div class="modal-body">
+                    <input type="hidden" id="userId" name="user_id">
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="nome" class="form-label">Nome Completo *</label>
+                            <input type="text" id="nome" name="nome" class="form-control" required>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">Email *</label>
+                            <input type="email" id="email" name="email" class="form-control" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="senha" class="form-label" id="senhaLabel">Senha *</label>
+                            <input type="password" id="senha" name="senha" class="form-control">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="tipo_usuario" class="form-label">Tipo de Usuário *</label>
+                            <select id="tipo_usuario" name="tipo_usuario" class="form-select" required>
+                                <option value="Usuario">Usuário</option>
+                                <option value="Admin">Administrador</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="gestao" class="form-label">Gestão</label>
+                            <input type="text" id="gestao" name="gestao" class="form-control">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="area" class="form-label">Área</label>
+                            <input type="text" id="area" name="area" class="form-control">
+                        </div>
+                    </div>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="equipe" class="form-label">Equipe</label>
+                            <input type="text" id="equipe" name="equipe" class="form-control">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="especialidade" class="form-label">Especialidade</label>
+                            <input type="text" id="especialidade" name="especialidade" class="form-control">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="ativo" name="ativo" checked>
+                            <label class="form-check-label" for="ativo">
+                                Usuário ativo
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let editingUserId = null;
+
+    function showUserModal(userId = null) {
+        const modal = new bootstrap.Modal(document.getElementById('userModal'));
+        const form = document.getElementById('userForm');
+        const title = document.getElementById('userModalTitle');
+        const senhaField = document.getElementById('senha');
+        const senhaLabel = document.getElementById('senhaLabel');
+        
+        if (userId) {
+            // Edit mode
+            title.textContent = 'Editar Usuário';
+            senhaLabel.textContent = 'Nova Senha (deixe em branco para manter)';
+            senhaField.required = false;
+            editingUserId = userId;
+            // Here you would load user data via API
+            console.log('Edit user:', userId);
+        } else {
+            // Create mode
+            title.textContent = 'Novo Usuário';
+            senhaLabel.textContent = 'Senha *';
+            senhaField.required = true;
+            form.reset();
+            editingUserId = null;
+        }
+        
+        modal.show();
+    }
+
+    function editUser(userId) {
+        showUserModal(userId);
+    }
+
+    function toggleUserStatus(userId, currentStatus) {
+        const action = currentStatus ? 'desativar' : 'ativar';
+        if (confirm(`Tem certeza que deseja ${action} este usuário?`)) {
+            // In a real implementation, make API call
+            showNotification(`Usuário ${action} com sucesso!`, 'success');
+            setTimeout(() => location.reload(), 1500);
+        }
+    }
+
+    function deleteUser(userId) {
+        if (confirm('Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.')) {
+            // In a real implementation, make API call
+            showNotification('Usuário excluído com sucesso!', 'warning');
+            setTimeout(() => location.reload(), 1500);
+        }
+    }
+
+    function exportUsers() {
+        showInfo('Funcionalidade de exportação será implementada em breve', 'Exportar');
+    }
+
+    function clearFilters() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('typeFilter').value = '';
+        document.getElementById('statusFilter').value = '';
+        filterUsers();
+    }
+
+    function filterUsers() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const typeValue = document.getElementById('typeFilter').value;
+        const statusValue = document.getElementById('statusFilter').value;
+        
+        const rows = document.querySelectorAll('#usersTable .user-row');
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            const type = row.dataset.type;
+            const status = row.dataset.status;
+            
+            const matchesSearch = text.includes(searchTerm);
+            const matchesType = !typeValue || type.includes(typeValue);
+            const matchesStatus = !statusValue || status.includes(statusValue);
+            
+            row.style.display = matchesSearch && matchesType && matchesStatus ? '' : 'none';
+        });
+    }
+
+    // Event listeners
+    document.getElementById('searchInput')?.addEventListener('input', filterUsers);
+    document.getElementById('typeFilter')?.addEventListener('change', filterUsers);
+    document.getElementById('statusFilter')?.addEventListener('change', filterUsers);
+
+    // Initialize tooltips
+    document.addEventListener('DOMContentLoaded', function() {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+{% endblock %}

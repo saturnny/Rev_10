@@ -1,0 +1,929 @@
+{% extends "base_bootstrap.html" %}
+
+{% block title %}Meus Lançamentos{% endblock %}
+
+{% block header %}
+<div class="topbar">
+    <div class="topbar-title">
+        <h1>Meus Lançamentos</h1>
+        <p>Gerencie todos os seus lançamentos de atividades</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Filtro de Data -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <label for="filtro-data" class="form-label mb-0 fw-bold">
+                    <i class="bi bi-calendar3 me-2"></i>Filtrar por Data:
+                </label>
+                <input type="date" id="filtro-data" class="form-control" style="width: 200px;">
+                <button class="btn btn-outline-secondary" onclick="limparFiltro()">
+                    <i class="bi bi-x-circle me-1"></i>Limpar Filtro
+                </button>
+            </div>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newLancamentoModal">
+                <i class="bi bi-plus-circle me-1"></i>Novo Lançamento
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Estatísticas -->
+<div class="stats-grid mb-4">
+    <div class="stat-card primary">
+        <div class="stat-icon">
+            <i class="bi bi-clipboard-data"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value" id="total-lancamentos">0</div>
+            <div class="stat-label">Total de Lançamentos</div>
+        </div>
+    </div>
+    
+    <div class="stat-card success">
+        <div class="stat-icon">
+            <i class="bi bi-clock"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value" id="total-horas">0.0</div>
+            <div class="stat-label">Horas Totais</div>
+        </div>
+    </div>
+    
+    <div class="stat-card info">
+        <div class="stat-icon">
+            <i class="bi bi-clock-history"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value" id="horas-pendentes">0.0</div>
+            <div class="stat-label">Horas Pendentes</div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabela de Lançamentos -->
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">
+            <i class="bi bi-list-ul me-2"></i>
+            Todos os Lançamentos
+        </h2>
+        <p class="card-description">Visualize e gerencie todos os seus lançamentos</p>
+    </div>
+
+    {% if lancamentos %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle" id="tabela-lancamentos">
+            <thead>
+                <tr>
+                    <th><i class="bi bi-calendar3 me-1"></i>Data</th>
+                    <th><i class="bi bi-clock me-1"></i>Início</th>
+                    <th><i class="bi bi-clock-fill me-1"></i>Fim</th>
+                    <th><i class="bi bi-list-task me-1"></i>Atividade</th>
+                    <th><i class="bi bi-hourglass-split me-1"></i>Duração</th>
+                    <th style="width: 120px;"><i class="bi bi-gear me-1"></i>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lancamento in lancamentos %}
+                <tr data-data="{{ lancamento.data.strftime('%Y-%m-%d') }}">
+                    <td>
+                        <span class="badge bg-light text-dark">{{ lancamento.data.strftime('%d/%m/%Y') }}</span>
+                    </td>
+                    <td>{{ lancamento.hora_inicio.strftime('%H:%M') }}</td>
+                    <td>{{ lancamento.hora_fim.strftime('%H:%M') }}</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-primary">{{ lancamento.atividade.nome }}</span>
+                            <small class="text-muted">{{ lancamento.atividade.categoria.nome }}</small>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge bg-success">{{ "%.1f"|format(lancamento.duracao_horas) }}h</span>
+                    </td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-sm btn-outline-primary edit-btn-caneta" 
+                                   data-bs-toggle="tooltip" 
+                                   data-bs-placement="top" 
+                                   title="Editar lançamento"
+                                   data-id="{{ lancamento.id }}"
+                                   data-data="{{ lancamento.data.strftime('%Y-%m-%d') }}"
+                                   data-inicio="{{ lancamento.hora_inicio.strftime('%H:%M') }}"
+                                   data-fim="{{ lancamento.hora_fim.strftime('%H:%M') }}"
+                                   data-atividade="{{ lancamento.atividade.id }}"
+                                   data-observacao="{{ lancamento.observacao|default('') }}"
+                                   onclick="openEditModal('{{ lancamento.id }}')">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger delete-btn-caneta" 
+                                    data-bs-toggle="tooltip" 
+                                    data-bs-placement="top" 
+                                    title="Excluir lançamento"
+                                    data-id="{{ lancamento.id }}"
+                                   onclick="deleteLancamento('{{ lancamento.id }}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="card-body text-center py-5">
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="bi bi-clipboard-x" style="font-size: 48px; color: var(--bs-secondary);"></i>
+            </div>
+            <div class="empty-state-title">Nenhum lançamento encontrado</div>
+            <div class="empty-state-description">
+                Você ainda não possui lançamentos de atividades registrados.
+            </div>
+            {% if user.tipo_usuario != "Admin" %}
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newLancamentoModal">
+                <i class="bi bi-plus-circle me-1"></i>
+                Adicionar Primeira Atividade
+            </button>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal Novo Lançamento -->
+<div class="modal fade" id="newLancamentoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    Novo Lançamento
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <form id="newLancamentoForm" method="post" action="/novo-lancamento" class="needs-validation" novalidate>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="modal_data" class="form-label">
+                                <i class="bi bi-calendar3 me-1"></i>Data
+                            </label>
+                            <input type="date" id="modal_data" name="data" class="form-control" required>
+                            <div class="invalid-feedback">
+                                Por favor, selecione uma data.
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="modal_hora_inicio" class="form-label">
+                                <i class="bi bi-clock me-1"></i>Hora Início
+                            </label>
+                            <input type="text" id="modal_hora_inicio" name="hora_inicio" class="form-control time-picker-input" 
+                                   placeholder="Selecione" readonly required>
+                            <div class="invalid-feedback">
+                                Por favor, informe a hora de início.
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="modal_hora_fim" class="form-label">
+                                <i class="bi bi-clock-fill me-1"></i>Hora Fim
+                            </label>
+                            <input type="text" id="modal_hora_fim" name="hora_fim" class="form-control time-picker-input" 
+                                   placeholder="Selecione" readonly required>
+                            <div class="invalid-feedback">
+                                Por favor, informe a hora de término.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="modal_atividade_id" class="form-label">
+                            <i class="bi bi-list-task me-1"></i>Atividade
+                        </label>
+                        <select id="modal_atividade_id" name="atividade_id" class="form-select" required>
+                            <option value="">Selecione uma atividade</option>
+                            {% for atividade in atividades %}
+                            <option value="{{ atividade.id }}">
+                                {{ atividade.nome }} ({{ atividade.categoria.nome }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="invalid-feedback">
+                            Por favor, selecione uma atividade.
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="modal_observacao" class="form-label">
+                            <i class="bi bi-chat-text me-1"></i>Observação
+                        </label>
+                        <textarea id="modal_observacao" name="observacao" class="form-control" rows="3" 
+                                  placeholder="Adicione uma observação sobre esta atividade (opcional)"></textarea>
+                    </div>
+
+                    <!-- Duration Display -->
+                    <div class="alert alert-info d-flex align-items-center" role="alert">
+                        <i class="bi bi-hourglass-split me-2"></i>
+                        <div id="modal_duration-display">
+                            <strong>Duração Calculada:</strong>
+                            <span class="badge bg-secondary">--</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary me-2" onclick="clearModalForm()">
+                        <i class="bi bi-arrow-clockwise me-1"></i>
+                        Limpar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Salvar Lançamento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirmação Exclusão -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Confirmar Exclusão
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="me-3">
+                        <i class="bi bi-trash text-danger" style="font-size: 2.5rem;"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-2">Tem certeza que deseja excluir este lançamento?</h6>
+                        <p class="text-muted mb-0">Esta ação não poderá ser desfeita.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="bi bi-trash me-1"></i>
+                    Sim, Excluir
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+/* Canetinhas */
+.edit-btn-caneta, .delete-btn-caneta {
+    padding: 2px 6px;
+    font-size: 11px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+}
+
+.edit-btn-caneta {
+    background-color: #f8f9fa;
+    color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.edit-btn-caneta:hover {
+    background-color: #0d6efd;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(13, 110, 253, 0.2);
+}
+
+.delete-btn-caneta {
+    background-color: #f8f9fa;
+    color: #dc3545;
+    border-color: #dc3545;
+}
+
+.delete-btn-caneta:hover {
+    background-color: #dc3545;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2);
+}
+
+.edit-btn-caneta i, .delete-btn-caneta i {
+    font-size: 12px;
+    margin: 0;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    border: 1px solid #f0f0f0;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+
+.stat-card.primary {
+    border-left: 4px solid var(--bs-primary);
+}
+
+.stat-card.success {
+    border-left: 4px solid var(--bs-success);
+}
+
+.stat-card.info {
+    border-left: 4px solid #ffc107;
+    background: white;
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.stat-card.primary .stat-icon {
+    background: linear-gradient(135deg, var(--bs-primary) 0%, var(--bs-primary-dark, #660000) 100%);
+}
+
+.stat-card.success .stat-icon {
+    background: linear-gradient(135deg, var(--bs-success) 0%, #198754 100%);
+}
+
+.stat-card.info .stat-icon {
+    background: linear-gradient(135deg, var(--bs-info) 0%, #0dcaf0 100%);
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--bs-dark);
+    line-height: 1;
+    margin-bottom: 4px;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--bs-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Time Picker Input */
+.time-picker-input {
+    cursor: pointer;
+    background: white;
+}
+
+.time-picker-input:hover {
+    background-color: var(--bs-gray-100);
+}
+
+/* Empty State */
+.empty-state {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.empty-state-icon {
+    margin-bottom: 16px;
+}
+
+.empty-state-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 8px;
+}
+
+.empty-state-description {
+    font-size: 14px;
+    color: #6c757d;
+    margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .stat-card {
+        padding: 20px;
+    }
+    
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/notifications.js"></script>
+<script>
+// Filtro de data
+function filtrarPorData() {
+    const dataSelecionada = document.getElementById('filtro-data').value;
+    const linhas = document.querySelectorAll('#tabela-lancamentos tbody tr');
+    
+    let totalLancamentos = 0;
+    let totalHoras = 0;
+    let diasUnicos = new Set();
+    
+    linhas.forEach(linha => {
+        const dataAttr = linha.getAttribute('data-data');
+        
+        if (!dataSelecionada || dataAttr === dataSelecionada) {
+            linha.style.display = '';
+            totalLancamentos++;
+            
+            // Calcular horas
+            const duracaoBadge = linha.querySelector('.badge.bg-success');
+            if (duracaoBadge) {
+                const horas = parseFloat(duracaoBadge.textContent.replace('h', ''));
+                totalHoras += horas;
+            }
+            
+            // Contar dias únicos
+            diasUnicos.add(dataAttr);
+        } else {
+            linha.style.display = 'none';
+        }
+    });
+    
+    // Calcular meta de horas baseado nos dias únicos (9 horas por dia)
+    const quantidadeDias = diasUnicos.size;
+    const metaHoras = quantidadeDias > 0 ? quantidadeDias * 9.0 : 9.0;
+    const horasPendentes = Math.max(0, metaHoras - totalHoras);
+    
+    // Atualizar estatísticas
+    document.getElementById('total-lancamentos').textContent = totalLancamentos;
+    document.getElementById('total-horas').textContent = totalHoras.toFixed(1);
+    document.getElementById('horas-pendentes').textContent = horasPendentes.toFixed(1);
+}
+
+function limparFiltro() {
+    document.getElementById('filtro-data').value = '';
+    filtrarPorData();
+}
+
+// Função para validar sobreposição de horários
+function validarSobreposicaoHorarios(lancamentoIdAtual = null) {
+    const dataSelecionada = document.getElementById('modal_data').value;
+    const horaInicio = document.getElementById('modal_hora_inicio').value;
+    const horaFim = document.getElementById('modal_hora_fim').value;
+    
+    if (!dataSelecionada || !horaInicio || !horaFim) {
+        return { valido: true }; // Deixa o validation padrão do HTML cuidar
+    }
+    
+    // Converter horários para minutos para comparação
+    const [inicioHoras, inicioMinutos] = horaInicio.split(':').map(Number);
+    const [fimHoras, fimMinutos] = horaFim.split(':').map(Number);
+    const novoInicio = inicioHoras * 60 + inicioMinutos;
+    const novoFim = fimHoras * 60 + fimMinutos;
+    
+    // Verificar se hora fim é maior que hora início
+    if (novoFim <= novoInicio) {
+        return { 
+            valido: false, 
+            mensagem: 'A hora de término deve ser maior que a hora de início.' 
+        };
+    }
+    
+    // Verificar sobreposição com lançamentos existentes do mesmo dia
+    const linhas = document.querySelectorAll('#tabela-lancamentos tbody tr');
+    
+    for (const linha of linhas) {
+        const dataAttr = linha.getAttribute('data-data');
+        
+        // Verificar se é do mesmo dia
+        if (dataAttr === dataSelecionada) {
+            // Ignorar o lançamento sendo editado
+            const editBtn = linha.querySelector('button[data-id]');
+            const lancamentoId = editBtn ? editBtn.getAttribute('data-id') : null;
+            
+            if (lancamentoIdAtual && lancamentoId === lancamentoIdAtual) {
+                continue; // Pula este lançamento (é o que está sendo editado)
+            }
+            
+            const inicioExistente = linha.querySelector('td:nth-child(2)').textContent.trim();
+            const fimExistente = linha.querySelector('td:nth-child(3)').textContent.trim();
+            
+            const [exInicioHoras, exInicioMinutos] = inicioExistente.split(':').map(Number);
+            const [exFimHoras, exFimMinutos] = fimExistente.split(':').map(Number);
+            
+            const exInicio = exInicioHoras * 60 + exInicioMinutos;
+            const exFim = exFimHoras * 60 + exFimMinutos;
+            
+            // Verificar sobreposição (exceto quando o novo início é igual ao fim do existente)
+            // Sobreposição ocorre quando:
+            // - novo início está entre início e fim do existente (exceto igual ao fim)
+            // - novo fim está entre início e fim do existente (exceto igual ao início)
+            // - novo período engloba completamente o período existente
+            const haSobreposicao = (
+                (novoInicio >= exInicio && novoInicio < exFim) || // início dentro do período
+                (novoFim > exInicio && novoFim <= exFim) ||       // fim dentro do período
+                (novoInicio <= exInicio && novoFim >= exFim)      // engloba o período
+            );
+            
+            // Verificar se é permitido (início do novo = fim do existente)
+            const permitido = (novoInicio === exFim);
+            
+            if (haSobreposicao && !permitido) {
+                return {
+                    valido: false,
+                    mensagem: `Conflito de horário: Já existe um lançamento das ${inicioExistente} às ${fimExistente} neste dia. Um novo lançamento só pode começar às ${fimExistente} ou depois.`
+                };
+            }
+        }
+    }
+    
+    return { valido: true };
+}
+
+// Event listener para o filtro
+document.getElementById('filtro-data')?.addEventListener('change', filtrarPorData);
+
+// Calcular e exibir duração
+function calculateDuration() {
+    const inicio = document.getElementById('modal_hora_inicio').value;
+    const fim = document.getElementById('modal_hora_fim').value;
+    const durationDisplay = document.getElementById('modal_duration-display');
+    
+    if (inicio && fim) {
+        const [inicioHoras, inicioMinutos] = inicio.split(':').map(Number);
+        const [fimHoras, fimMinutos] = fim.split(':').map(Number);
+        
+        const inicioTotal = inicioHoras * 60 + inicioMinutos;
+        const fimTotal = fimHoras * 60 + fimMinutos;
+        
+        if (fimTotal > inicioTotal) {
+            const diff = fimTotal - inicioTotal;
+            const horas = Math.floor(diff / 60);
+            const minutos = diff % 60;
+            const duracao = horas + (minutos / 60);
+            
+            durationDisplay.innerHTML = `<strong>Duração Calculada:</strong> <span class="badge bg-success">${horas}h${minutos > 0 ? minutos + 'min' : ''} (${duracao.toFixed(1)}h)</span>`;
+        } else {
+            durationDisplay.innerHTML = '<strong>Duração Calculada:</strong> <span class="badge bg-warning">Hora fim deve ser maior</span>';
+        }
+    } else {
+        durationDisplay.innerHTML = '<strong>Duração Calculada:</strong> <span class="badge bg-secondary">--</span>';
+    }
+}
+
+// Clear modal form
+function clearModalForm() {
+    document.getElementById('modal_hora_inicio').value = '';
+    document.getElementById('modal_hora_fim').value = '';
+    document.getElementById('modal_atividade_id').value = '';
+    document.getElementById('modal_observacao').value = '';
+    document.getElementById('modal_duration-display').innerHTML = '<strong>Duração Calculada:</strong> <span class="badge bg-secondary">--</span>';
+}
+
+// Time picker simplificado
+class SimpleTimePicker {
+    constructor(inputId) {
+        this.input = document.getElementById(inputId);
+        this.isOpen = false;
+        this.selectedHour = null;
+        this.selectedMinute = null;
+        this.init();
+    }
+
+    init() {
+        this.createPicker();
+        this.attachEvents();
+    }
+
+    createPicker() {
+        this.picker = document.createElement('div');
+        this.picker.className = 'simple-time-picker';
+        this.picker.style.cssText = `
+            position: absolute;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            padding: 16px;
+            z-index: 9999;
+            min-width: 280px;
+            display: none;
+        `;
+        
+        this.picker.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <strong>Selecionar Horário</strong>
+                <button type="button" class="btn-close" onclick="this.closest('.simple-time-picker').style.display='none'"></button>
+            </div>
+            <div class="mb-3">
+                <label class="form-label small">Horas (7-16):</label>
+                <div class="d-flex flex-wrap gap-2">
+                    ${Array.from({length: 10}, (_, i) => i + 7).map(h => 
+                        `<button type="button" class="btn btn-sm btn-outline-secondary hour-btn" data-hour="${h}" style="width: 50px;">${h.toString().padStart(2,'0')}</button>`
+                    ).join('')}
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label small">Minutos:</label>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary minute-btn" data-minute="0">:00</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary minute-btn" data-minute="15">:15</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary minute-btn" data-minute="30">:30</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary minute-btn" data-minute="45">:45</button>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="this.closest('.simple-time-picker').querySelectorAll('.hour-btn, .minute-btn').forEach(b => b.classList.remove('btn-primary')); this.closest('.simple-time-picker').querySelectorAll('.hour-btn, .minute-btn').forEach(b => b.classList.add('btn-outline-secondary'))">Limpar</button>
+                <button type="button" class="btn btn-sm btn-primary" onclick="this.closest('.simple-time-picker').style.display='none'">Fechar</button>
+            </div>
+        `;
+        
+        document.body.appendChild(this.picker);
+        
+        // Event listeners
+        this.picker.querySelectorAll('.hour-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.picker.querySelectorAll('.hour-btn').forEach(b => {
+                    b.classList.remove('btn-primary');
+                    b.classList.add('btn-outline-secondary');
+                });
+                btn.classList.remove('btn-outline-secondary');
+                btn.classList.add('btn-primary');
+                this.selectedHour = parseInt(btn.dataset.hour);
+                this.updateInput();
+            });
+        });
+        
+        this.picker.querySelectorAll('.minute-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.picker.querySelectorAll('.minute-btn').forEach(b => {
+                    b.classList.remove('btn-primary');
+                    b.classList.add('btn-outline-secondary');
+                });
+                btn.classList.remove('btn-outline-secondary');
+                btn.classList.add('btn-primary');
+                this.selectedMinute = parseInt(btn.dataset.minute);
+                this.updateInput();
+            });
+        });
+    }
+
+    attachEvents() {
+        this.input.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.open();
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!this.picker.contains(e.target) && e.target !== this.input) {
+                this.picker.style.display = 'none';
+            }
+        });
+    }
+
+    open() {
+        const rect = this.input.getBoundingClientRect();
+        this.picker.style.top = (rect.bottom + window.scrollY + 5) + 'px';
+        this.picker.style.left = rect.left + 'px';
+        this.picker.style.display = 'block';
+    }
+
+    updateInput() {
+        if (this.selectedHour !== null && this.selectedMinute !== null) {
+            const timeStr = `${this.selectedHour.toString().padStart(2, '0')}:${this.selectedMinute.toString().padStart(2, '0')}`;
+            this.input.value = timeStr;
+            this.input.dispatchEvent(new Event('change'));
+        }
+    }
+}
+
+// Event listeners
+document.getElementById('modal_hora_inicio')?.addEventListener('change', calculateDuration);
+document.getElementById('modal_hora_fim')?.addEventListener('change', calculateDuration);
+
+// Inicialização
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('modal_data').value = today;
+    
+    // Resetar formulário quando abrir modal para novo lançamento
+    document.querySelectorAll('[data-bs-target="#newLancamentoModal"]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            resetFormToNew();
+        });
+    });
+    
+    // Inicializar time pickers quando o modal abrir
+    const modal = document.getElementById('newLancamentoModal');
+    if (modal) {
+        modal.addEventListener('shown.bs.modal', function() {
+            new SimpleTimePicker('modal_hora_inicio');
+            new SimpleTimePicker('modal_hora_fim');
+        });
+    }
+    
+    // Inicializar estatísticas
+    filtrarPorData();
+});
+
+function resetFormToNew() {
+    document.getElementById('newLancamentoForm').action = '/novo-lancamento';
+    document.getElementById('modal_data').readOnly = false;
+    document.getElementById('modal_data').style.backgroundColor = '';
+    document.getElementById('modal_data').style.fontWeight = '';
+    document.querySelector('#newLancamentoModal .modal-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Novo Lançamento';
+    document.querySelector('#newLancamentoModal button[type="submit"]').innerHTML = '<i class="bi bi-check-circle me-1"></i>Salvar Lançamento';
+    clearModalForm();
+}
+
+// Funções de edição e exclusão
+function openEditModal(lancamentoId) {
+    const editBtn = document.querySelector(`button[data-id="${lancamentoId}"]`);
+    
+    if (editBtn) {
+        const data = editBtn.dataset.data;
+        const inicio = editBtn.dataset.inicio;
+        const fim = editBtn.dataset.fim;
+        const atividadeId = editBtn.dataset.atividade;
+        const observacao = editBtn.dataset.observacao || '';
+        
+        // Usar formato ISO (YYYY-MM-DD) para o input date
+        document.getElementById('modal_data').value = data;
+        document.getElementById('modal_hora_inicio').value = inicio;
+        document.getElementById('modal_hora_fim').value = fim;
+        document.getElementById('modal_atividade_id').value = atividadeId;
+        document.getElementById('modal_observacao').value = observacao;
+        
+        document.getElementById('modal_data').readOnly = true;
+        document.getElementById('modal_data').style.backgroundColor = '#f8f9fa';
+        document.getElementById('modal_data').style.fontWeight = '500';
+        
+        document.getElementById('newLancamentoForm').action = `/editar-lancamento/${lancamentoId}`;
+        document.querySelector('#newLancamentoModal .modal-title').innerHTML = '<i class="bi bi-pencil me-2"></i>Editar Lançamento';
+        document.querySelector('#newLancamentoModal button[type="submit"]').innerHTML = '<i class="bi bi-check-circle me-1"></i>Atualizar Lançamento';
+        
+        const modal = new bootstrap.Modal(document.getElementById('newLancamentoModal'));
+        modal.show();
+        
+        setTimeout(() => {
+            new SimpleTimePicker('modal_hora_inicio');
+            new SimpleTimePicker('modal_hora_fim');
+        }, 100);
+    }
+}
+
+let deleteLancamentoId = null;
+
+function deleteLancamento(lancamentoId) {
+    deleteLancamentoId = lancamentoId;
+    const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    modal.show();
+}
+
+document.getElementById('confirmDeleteBtn')?.addEventListener('click', function() {
+    if (deleteLancamentoId) {
+        fetch(`/excluir-lancamento/${deleteLancamentoId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                const row = document.querySelector(`button[data-id="${deleteLancamentoId}"]`).closest('tr');
+                row.remove();
+                
+                showNotification('Lançamento excluído com sucesso!', 'success');
+                filtrarPorData();
+                
+                const modal = bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal'));
+                modal.hide();
+            } else {
+                throw new Error('Erro ao excluir lançamento');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao excluir lançamento');
+        });
+    }
+});
+
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="bi ${type === 'success' ? 'bi-check-circle' : type === 'error' ? 'bi-exclamation-triangle' : 'bi-info-circle'} me-2"></i>
+            <div>${message}</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 5000);
+}
+
+// Bootstrap validation
+(function () {
+    'use strict';
+    var forms = document.querySelectorAll('.needs-validation');
+    Array.prototype.slice.call(forms).forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            } else {
+                // Validar sobreposição de horários
+                // Extrair ID do lançamento se for edição (action contém /editar-lancamento/)
+                const formAction = form.getAttribute('action') || '';
+                let lancamentoIdAtual = null;
+                const match = formAction.match(/\/editar-lancamento\/(\d+)/);
+                if (match) {
+                    lancamentoIdAtual = match[1];
+                }
+                
+                const validacao = validarSobreposicaoHorarios(lancamentoIdAtual);
+                if (!validacao.valido) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    alert(validacao.mensagem);
+                    return;
+                }
+            }
+            form.classList.add('was-validated');
+        }, false);
+    });
+})();
+</script>
+{% endblock %}

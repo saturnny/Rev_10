@@ -1,0 +1,133 @@
+{% extends "base_bootstrap.html" %}
+
+{% block title %}Gerenciar Categorias - {{ user.nome }}{% endblock %}
+
+{% block header %}
+<div class="topbar">
+    <div class="topbar-title">
+        <h1>Gerenciamento de Categorias</h1>
+        <p>Administre as categorias do sistema</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#categoriaModal">
+            <i class="bi bi-plus-circle me-1"></i>
+            Nova Categoria
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<style>
+.category-card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    transition: transform 0.2s ease;
+}
+
+.category-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+}
+
+.category-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    margin-bottom: 16px;
+}
+
+.category-icon.primary {
+    background: linear-gradient(135deg, var(--bs-primary) 0%, var(--bs-primary-dark, #660000) 100%);
+}
+
+.category-icon.success {
+    background: linear-gradient(135deg, var(--bs-success) 0%, #198754 100%);
+}
+
+.category-icon.info {
+    background: linear-gradient(135deg, var(--bs-info) 0%, #0dcaf0 100%);
+}
+
+.category-icon.warning {
+    background: linear-gradient(135deg, var(--bs-warning) 0%, #ffc107 100%);
+}
+
+.btn-action {
+    padding: 4px 8px;
+    font-size: 0.85rem;
+    border-radius: 6px;
+}
+</style>
+
+<!-- Lista de Categorias -->
+<div class="row">
+    {% for categoria in categorias %}
+    <div class="col-md-6 col-lg-4 mb-3">
+        <div class="card category-card h-100">
+            <div class="card-body text-center">
+                <div class="category-icon {{ cycle(['primary', 'success', 'info', 'warning'], loop.index0) }}">
+                    <i class="bi bi-folder"></i>
+                </div>
+                <h5 class="card-title">{{ categoria.nome }}</h5>
+                <small class="text-muted">
+                    <i class="bi bi-calendar3 me-1"></i>
+                    Criado em {{ categoria.created_at.strftime('%d/%m/%Y') if categoria.created_at else 'N/A' }}
+                </small>
+                <div class="mt-3">
+                    <form method="post" action="/admin/categorias/{{ categoria.id }}/excluir" style="display: inline;">
+                        <button type="submit" class="btn btn-sm btn-outline-danger btn-action" onclick="return confirm('Tem certeza que deseja excluir esta categoria?')">
+                            <i class="bi bi-trash me-1"></i> Excluir
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if not categorias %}
+<div class="text-center py-5">
+    <i class="bi bi-folder-x text-muted" style="font-size: 3rem;"></i>
+    <h4 class="text-muted mt-3">Nenhuma categoria encontrada</h4>
+    <p class="text-muted">Clique em "Nova Categoria" para começar.</p>
+</div>
+{% endif %}
+
+<!-- Modal Nova Categoria -->
+<div class="modal fade" id="categoriaModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    Nova Categoria
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="/admin/categorias">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="nome" class="form-label">Nome da Categoria</label>
+                        <input type="text" class="form-control" id="nome" name="nome" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
