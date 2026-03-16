@@ -29,18 +29,11 @@
             <div class="col-md-4">
                 <input type="text" class="form-control" placeholder="Buscar por nome ou email" id="searchInput">
             </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <select class="form-select" id="typeFilter">
                     <option value="">Todos os tipos</option>
                     <option value="Admin">Administrador</option>
                     <option value="Usuario">Usuário</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <select class="form-select" id="statusFilter">
-                    <option value="">Todos os status</option>
-                    <option value="true">Ativos</option>
-                    <option value="false">Inativos</option>
                 </select>
             </div>
             <div class="col-md-2">
@@ -75,14 +68,13 @@
                     <th><i class="bi bi-people me-1"></i>Equipe</th>
                     <th><i class="bi bi-award me-1"></i>Especialidade</th>
                     <th><i class="bi bi-shield me-1"></i>Tipo</th>
-                    <th><i class="bi bi-toggle-on me-1"></i>Status</th>
                     <th style="width: 150px;"><i class="bi bi-gear me-1"></i>Ações</th>
                 </tr>
             </thead>
             <tbody>
                 {% for usuario in usuarios %}
                 <tr class="user-row" data-name="{{ usuario.nome|lower }}" data-email="{{ usuario.email|lower }}" 
-                    data-type="{{ usuario.tipo_usuario }}" data-status="{{ usuario.ativo|lower }}">
+                    data-type="{{ usuario.tipo_usuario }}">
                     <td>
                         <div class="d-flex align-items-center gap-3">
                             <div class="avatar avatar-sm bg-primary">{{ usuario.nome[:2].upper() }}</div>
@@ -103,12 +95,6 @@
                         </span>
                     </td>
                     <td>
-                        <span class="badge bg-{{ 'success' if usuario.ativo else 'danger' }}">
-                            <i class="bi bi-{{ 'check-circle' if usuario.ativo else 'x-circle' }} me-1"></i>
-                            {% if usuario.ativo %}Ativo{% else %}Inativo{% endif %}
-                        </span>
-                    </td>
-                    <td>
                         <div class="btn-group" role="group">
                             <button class="btn btn-sm btn-outline-primary" 
                                     onclick="editUser({{ usuario.id }})"
@@ -118,13 +104,6 @@
                                 <i class="bi bi-pencil"></i>
                             </button>
                             {% if usuario.id != user.id %}
-                            <button class="btn btn-sm btn-outline-{{ 'danger' if usuario.ativo else 'success' }}" 
-                                    onclick="toggleUserStatus({{ usuario.id }}, {{ 'false' if usuario.ativo else 'true' }})"
-                                    data-bs-toggle="tooltip" 
-                                    data-bs-placement="top" 
-                                    title="{% if usuario.ativo %}Desativar{% else %}Ativar{% endif %} usuário">
-                                <i class="bi bi-{{ 'pause' if usuario.ativo else 'play' }}"></i>
-                            </button>
                             <button class="btn btn-sm btn-outline-danger" 
                                     onclick="deleteUser({{ usuario.id }})"
                                     data-bs-toggle="tooltip" 
@@ -153,8 +132,8 @@
                     {{ usuarios|selectattr('tipo_usuario', 'equalto', 'Usuario')|list|length }} usuários comuns
                 </span>
                 <span class="badge bg-success">
-                    <i class="bi bi-check-circle me-1"></i>
-                    {{ usuarios|selectattr('ativo')|list|length }} ativos
+                    <i class="bi bi-people-fill me-1"></i>
+                    {{ usuarios|length }} total
                 </span>
             </div>
             <div>
@@ -248,15 +227,6 @@
                         <div class="col-md-6">
                             <label for="especialidade" class="form-label">Especialidade</label>
                             <input type="text" id="especialidade" name="especialidade" class="form-control">
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="ativo" name="ativo" checked>
-                            <label class="form-check-label" for="ativo">
-                                Usuário ativo
-                            </label>
                         </div>
                     </div>
                 </div>

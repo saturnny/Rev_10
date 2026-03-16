@@ -1,0 +1,385 @@
+{% extends "base_bootstrap.html" %}
+
+{% block title %}Integração SharePoint - {{ user.nome }}{% endblock %}
+
+{% block header %}
+<div class="topbar">
+    <div class="topbar-title">
+        <h1>Integração com SharePoint</h1>
+        <p>Sincronize dados com listas do SharePoint</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<style>
+.sync-card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    transition: transform 0.2s ease;
+}
+
+.sync-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+}
+
+.status-badge {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.status-badge.configured {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-badge.not-configured {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.sync-button {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.sync-button:hover {
+    transform: translateY(-1px);
+}
+
+.sync-results {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 16px;
+}
+
+.config-section {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+
+.config-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.config-item:last-child {
+    border-bottom: none;
+}
+
+.config-label {
+    font-weight: 500;
+    color: #495057;
+}
+
+.config-value {
+    color: #6c757d;
+    font-family: monospace;
+    font-size: 0.9rem;
+}
+</style>
+
+<!-- Status Card -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card sync-card">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="mb-1">
+                        <i class="bi bi-cloud-arrow-up me-2"></i>
+                        Status da Integração
+                    </h4>
+                    <p class="text-muted mb-0">
+                        {% if configured %}
+                            Integração configurada e pronta para uso
+                        {% else %}
+                            Configure as credenciais do SharePoint para iniciar a sincronização
+                        {% endif %}
+                    </p>
+                </div>
+                <span class="status-badge {% if configured %}configured{% else %}not-configured{% endif %}">
+                    {% if configured %}
+                        <i class="bi bi-check-circle me-1"></i> Configurado
+                    {% else %}
+                        <i class="bi bi-exclamation-circle me-1"></i> Não Configurado
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Configuration Info -->
+{% if configured %}
+<div class="config-section">
+    <h5 class="mb-3">
+        <i class="bi bi-gear me-2"></i>
+        Configurações Atuais
+    </h5>
+    <div class="config-item">
+        <span class="config-label">Site do SharePoint</span>
+        <span class="config-value">{{ site_url }}</span>
+    </div>
+    <div class="config-item">
+        <span class="config-label">Lista de Usuários</span>
+        <span class="config-value">{{ users_list }}</span>
+    </div>
+    <div class="config-item">
+        <span class="config-label">Lista de Lançamentos</span>
+        <span class="config-value">{{ lancamentos_list }}</span>
+    </div>
+    <div class="config-item">
+        <span class="config-label">Intervalo de Sincronização</span>
+        <span class="config-value">{{ sync_interval }} minutos</span>
+    </div>
+</div>
+
+<!-- Sync Actions -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card sync-card h-100">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="bi bi-download text-primary" style="font-size: 2.5rem;"></i>
+                </div>
+                <h5>Importar do SharePoint</h5>
+                <p class="text-muted small">
+                    Importa usuários da lista do SharePoint para o sistema
+                </p>
+                <button class="btn btn-primary sync-button w-100" onclick="runSync('import')">
+                    <i class="bi bi-download me-2"></i>
+                    Importar Agora
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card sync-card h-100">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="bi bi-upload text-success" style="font-size: 2.5rem;"></i>
+                </div>
+                <h5>Exportar para SharePoint</h5>
+                <p class="text-muted small">
+                    Exporta usuários e lançamentos para o SharePoint
+                </p>
+                <button class="btn btn-success sync-button w-100" onclick="runSync('export')">
+                    <i class="bi bi-upload me-2"></i>
+                    Exportar Agora
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card sync-card h-100">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="bi bi-arrow-left-right text-info" style="font-size: 2.5rem;"></i>
+                </div>
+                <h5>Sincronização Completa</h5>
+                <p class="text-muted small">
+                    Importa usuários e exporta todos os dados
+                </p>
+                <button class="btn btn-info sync-button w-100" onclick="runSync('both')">
+                    <i class="bi bi-arrow-left-right me-2"></i>
+                    Sincronizar Tudo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scheduler Status -->
+<div class="card sync-card mb-4">
+    <div class="card-body">
+        <h5 class="mb-3">
+            <i class="bi bi-clock-history me-2"></i>
+            Agendamento Automático
+        </h5>
+        {% if scheduler_status.running %}
+            <div class="alert alert-success">
+                <i class="bi bi-check-circle me-2"></i>
+                Sincronização automática está ativa
+                {% if scheduler_status.jobs %}
+                    <br><small class="ms-4">
+                        Próxima execução: {{ scheduler_status.jobs[0].next_run or 'Calculando...' }}
+                    </small>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                Sincronização automática está inativa
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Results Container -->
+<div id="syncResults" class="sync-results" style="display: none;">
+    <h6 class="mb-3">Resultado da Sincronização</h6>
+    <div id="syncResultsContent"></div>
+</div>
+
+{% else %}
+<!-- Configuration Instructions -->
+<div class="config-section">
+    <h5 class="mb-4">
+        <i class="bi bi-info-circle me-2"></i>
+        Como Configurar a Integração
+    </h5>
+    
+    <div class="alert alert-info mb-4">
+        <h6 class="alert-heading">Pré-requisitos</h6>
+        <ul class="mb-0">
+            <li>Conta Microsoft 365 com acesso ao SharePoint</li>
+            <li>Permissões de administrador no site do SharePoint</li>
+            <li>Aplicativo registrado no Azure AD</li>
+        </ul>
+    </div>
+    
+    <h6>Passos para configuração:</h6>
+    <ol class="mb-4">
+        <li>Crie um arquivo <code>.env</code> na raiz do projeto</li>
+        <li>Configure as seguintes variáveis de ambiente:</li>
+    </ol>
+    
+    <div class="bg-dark text-light p-3 rounded mb-4">
+        <pre class="mb-0"><code>SHAREPOINT_TENANT_ID=seu-tenant-id
+SHAREPOINT_CLIENT_ID=seu-client-id
+SHAREPOINT_CLIENT_SECRET=seu-client-secret
+SHAREPOINT_SITE_URL=https://suaempresa.sharepoint.com/sites/seu-site
+SHAREPOINT_USERS_LIST_NAME=Funcionarios
+SHAREPOINT_LANCAMENTOS_LIST_NAME=Lancamentos
+SHAREPOINT_SYNC_INTERVAL_MINUTES=60</code></pre>
+    </div>
+    
+    <div class="alert alert-warning">
+        <i class="bi bi-shield-lock me-2"></i>
+        <strong>Importante:</strong> Mantenha as credenciais seguras e não compartilhe o arquivo .env.
+    </div>
+</div>
+{% endif %}
+
+<script>
+function runSync(direction) {
+    const button = event.target.closest('button');
+    const originalText = button.innerHTML;
+    
+    // Disable button and show loading
+    button.disabled = true;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sincronizando...';
+    
+    // Hide previous results
+    document.getElementById('syncResults').style.display = 'none';
+    
+    fetch('/admin/sharepoint/sync', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `direction=${direction}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showSyncResults(data.results, 'success');
+        } else {
+            showSyncResults({ error: data.error }, 'danger');
+        }
+    })
+    .catch(error => {
+        showSyncResults({ error: error.message }, 'danger');
+    })
+    .finally(() => {
+        button.disabled = false;
+        button.innerHTML = originalText;
+    });
+}
+
+function showSyncResults(results, type) {
+    const container = document.getElementById('syncResults');
+    const content = document.getElementById('syncResultsContent');
+    
+    let html = '';
+    
+    if (type === 'success') {
+        html = `
+            <div class="row">
+                ${results.users_import ? `
+                <div class="col-md-6 mb-3">
+                    <div class="card border-success">
+                        <div class="card-body">
+                            <h6 class="text-success">Importação de Usuários</h6>
+                            <div class="d-flex justify-content-between">
+                                <span><i class="bi bi-plus-circle text-success me-1"></i> Criados: ${results.users_import.created}</span>
+                                <span><i class="bi bi-arrow-repeat text-primary me-1"></i> Atualizados: ${results.users_import.updated}</span>
+                            </div>
+                            ${results.users_import.errors > 0 ? `<div class="text-danger mt-2"><i class="bi bi-exclamation-triangle me-1"></i> Erros: ${results.users_import.errors}</div>` : ''}
+                        </div>
+                    </div>
+                </div>
+                ` : ''}
+                ${results.users_export ? `
+                <div class="col-md-6 mb-3">
+                    <div class="card border-success">
+                        <div class="card-body">
+                            <h6 class="text-success">Exportação de Usuários</h6>
+                            <div class="d-flex justify-content-between">
+                                <span><i class="bi bi-plus-circle text-success me-1"></i> Criados: ${results.users_export.created}</span>
+                                <span><i class="bi bi-arrow-repeat text-primary me-1"></i> Atualizados: ${results.users_export.updated}</span>
+                            </div>
+                            ${results.users_export.errors > 0 ? `<div class="text-danger mt-2"><i class="bi bi-exclamation-triangle me-1"></i> Erros: ${results.users_export.errors}</div>` : ''}
+                        </div>
+                    </div>
+                </div>
+                ` : ''}
+                ${results.lancamentos_export ? `
+                <div class="col-md-6 mb-3">
+                    <div class="card border-info">
+                        <div class="card-body">
+                            <h6 class="text-info">Exportação de Lançamentos</h6>
+                            <div class="d-flex justify-content-between">
+                                <span><i class="bi bi-plus-circle text-success me-1"></i> Criados: ${results.lancamentos_export.created}</span>
+                                <span><i class="bi bi-arrow-repeat text-primary me-1"></i> Atualizados: ${results.lancamentos_export.updated}</span>
+                            </div>
+                            ${results.lancamentos_export.errors > 0 ? `<div class="text-danger mt-2"><i class="bi bi-exclamation-triangle me-1"></i> Erros: ${results.lancamentos_export.errors}</div>` : ''}
+                        </div>
+                    </div>
+                </div>
+                ` : ''}
+            </div>
+            <div class="text-muted small">
+                <i class="bi bi-clock me-1"></i>
+                Última sincronização: ${new Date(results.timestamp).toLocaleString('pt-BR')}
+            </div>
+        `;
+    } else {
+        html = `
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <strong>Erro na sincronização:</strong> ${results.error}
+            </div>
+        `;
+    }
+    
+    content.innerHTML = html;
+    container.style.display = 'block';
+    container.scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+
+{% endblock %}

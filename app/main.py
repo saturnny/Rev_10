@@ -491,6 +491,72 @@ async def excluir_categoria(
     delete_categoria(db, categoria_id)
     return RedirectResponse(url="/admin/categorias", status_code=status.HTTP_303_SEE_OTHER)
 
+# ============== SHAREPOINT INTEGRATION ROUTES ==============
+
+@app.get("/admin/sharepoint", response_class=HTMLResponse)
+async def sharepoint_config_page(
+    request: Request,
+    current_user: User = Depends(require_admin)
+):
+    """SharePoint integration configuration page"""
+    from .sharepoint import SharePointConfig
+    from .scheduler import get_scheduler_status
+    
+    config = SharePointConfig()
+    scheduler_status = get_scheduler_status()
+    
+    return templates.TemplateResponse("admin/sharepoint.html", {
+        "request": request,
+        "user": current_user,
+        "configured": config.is_configured(),
+        "site_url": config.SITE_URL,
+        "users_list": config.USERS_LIST_NAME,
+        "lancamentos_list": config.LANCAMENTOS_LIST_NAME,
+        "sync_interval": config.SYNC_INTERVAL,
+        "scheduler_status": scheduler_status
+    })
+
+@app.post("/admin/sharepoint/sync", response_class=JSONResponse)
+async def trigger_sharepoint_sync(
+    request: Request,
+    direction: str = Form("export"),
+    current_user: User = Depends(require_admin)
+):
+    """Manually trigger SharePoint synchronization"""
+    from .scheduler import run_sync_now
+    
+    try:
+        results = run_sync_now(direction=direction)
+        return JSONResponse({
+            "success": True,
+            "results": results
+        })
+    except Exception as e:
+        return JSONResponse({
+            "success": False,
+            "error": str(e)
+        }, status_code=500)
+
+@app.get("/admin/sharepoint/status", response_class=JSONResponse)
+async def get_sharepoint_status(
+    current_user: User = Depends(require_admin)
+):
+    """Get SharePoint integration status"""
+    from .sharepoint import SharePointConfig
+    from .scheduler import get_scheduler_status
+    
+    config = SharePointConfig()
+    scheduler_status = get_scheduler_status()
+    
+    return JSONResponse({
+        "configured": config.is_configured(),
+        "site_url": config.SITE_URL,
+        "users_list": config.USERS_LIST_NAME,
+        "lancamentos_list": config.LANCAMENTOS_LIST_NAME,
+        "sync_interval": config.SYNC_INTERVAL,
+        "scheduler": scheduler_status
+    })
+
 @app.get("/logout")
 async def logout():
     response = RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)

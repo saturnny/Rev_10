@@ -44,10 +44,6 @@
 
                 <div class="sidebar-section">
                     <div class="sidebar-section-title">Administração</div>
-                    <a href="/admin/lancamentos" class="sidebar-item {% if request.url.path == '/admin/lancamentos' %}active{% endif %}">
-                        <i class="bi bi-people"></i>
-                        <span>Registros da Equipe</span>
-                    </a>
                     <a href="/admin/usuarios" class="sidebar-item {% if request.url.path == '/admin/usuarios' %}active{% endif %}">
                         <i class="bi bi-person"></i>
                         <span>Usuários</span>
@@ -59,6 +55,10 @@
                     <a href="/admin/categorias" class="sidebar-item {% if request.url.path == '/admin/categorias' %}active{% endif %}">
                         <i class="bi bi-tag"></i>
                         <span>Categorias</span>
+                    </a>
+                    <a href="/admin/sharepoint" class="sidebar-item {% if request.url.path == '/admin/sharepoint' %}active{% endif %}">
+                        <i class="bi bi-cloud-arrow-up"></i>
+                        <span>Integração SharePoint</span>
                     </a>
                 </div>
                 {% else %}
