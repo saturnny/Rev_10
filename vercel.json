@@ -1,15 +1,11 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "api/index.py",
-      "use": "@vercel/python",
-      "config": {
-        "maxLambdaSize": "15mb",
-        "runtime": "python3.9"
-      }
+  "functions": {
+    "api/index.py": {
+      "runtime": "python3.9",
+      "maxDuration": 10
     }
-  ],
+  },
   "routes": [
     {
       "src": "/static/(.*)",
@@ -22,10 +18,5 @@
   ],
   "env": {
     "SHAREPOINT_SYNC_INTERVAL_MINUTES": "60"
-  },
-  "functions": {
-    "api/index.py": {
-      "maxDuration": 10
-    }
   }
 }
