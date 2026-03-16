@@ -23,60 +23,6 @@ from .auth import (
 
 app = FastAPI(title="Time Tracking System", description="Sistema de controle de ponto e atividades", docs_url=None, redoc_url=None)
 
-# Debug endpoints for Vercel troubleshooting
-@app.get("/debug/env")
-async def debug_environment():
-    """Check environment variables"""
-    import sys
-    database_url = os.environ.get("DATABASE_URL")
-    return {
-        "python_version": sys.version,
-        "database_url_exists": bool(database_url),
-        "database_url_length": len(database_url) if database_url else 0,
-        "database_url_preview": database_url[:50] + "..." if database_url else None,
-    }
-
-@app.get("/debug/db-test")
-async def debug_database():
-    """Test database connection"""
-    try:
-        import ssl
-        from sqlalchemy import create_engine, text
-        from sqlalchemy.pool import NullPool
-        
-        database_url = os.environ.get("DATABASE_URL")
-        if not database_url:
-            return {"error": "DATABASE_URL not found"}
-        
-        ssl_context = ssl.create_default_context()
-        ssl_context.check_hostname = False
-        ssl_context.verify_mode = ssl.CERT_NONE
-        
-        engine = create_engine(
-            database_url,
-            connect_args={"ssl_context": ssl_context},
-            poolclass=NullPool,
-        )
-        
-        with engine.connect() as conn:
-            result = conn.execute(text("SELECT 1"))
-            test_result = result.scalar()
-        
-        return {
-            "status": "success",
-            "test_query": test_result,
-            "message": "Database connection working"
-        }
-        
-    except Exception as e:
-        import traceback
-        return {
-            "status": "error",
-            "error": str(e),
-            "error_type": type(e).__name__,
-            "traceback": traceback.format_exc()
-        }
-
 # Exception middleware for debugging
 from fastapi import Request as FastAPIRequest
 from fastapi.responses import Response as FastAPIResponse
