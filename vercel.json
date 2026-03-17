@@ -1,11 +1,13 @@
 {
   "functions": {
-    "api/simple_test.py": {}
+    "api/index.js": {
+      "runtime": "@vercel/node@18"
+    }
   },
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "api/simple_test.py"
+      "dest": "api/index.js"
     }
   ]
 }

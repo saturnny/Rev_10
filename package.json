@@ -1,0 +1,24 @@
+{
+  "name": "time-tracking-system",
+  "version": "1.0.0",
+  "description": "Time Tracking System - Node.js Version",
+  "main": "api/index.js",
+  "scripts": {
+    "start": "node api/index.js",
+    "dev": "nodemon api/index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "ejs": "^3.1.9",
+    "sequelize": "^6.32.1",
+    "pg": "^8.11.0",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "joi": "^17.9.2",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5"
+  },
+  "engines": {
+    "node": "18.x"
+  }
+}
