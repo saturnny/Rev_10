@@ -1,0 +1,19 @@
+{
+  "name": "time-tracking-system",
+  "version": "1.0.0",
+  "description": "Time Tracking System deployed on Vercel",
+  "main": "api/stable.py",
+  "scripts": {
+    "build": "echo 'Build completed'",
+    "start": "python api/stable.py",
+    "dev": "python -m http.server 3000"
+  },
+  "keywords": ["time-tracking", "vercel", "python", "serverless"],
+  "author": "Time Tracking Team",
+  "license": "MIT",
+  "engines": {
+    "node": "18.x"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

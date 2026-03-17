@@ -3,7 +3,7 @@
   "builds": [
     {
       "src": "api/stable.py",
-      "use": "@vercel/python"
+      "use": "@vercel/python@3.12"
     }
   ],
   "routes": [
@@ -11,5 +11,13 @@
       "src": "/(.*)",
       "dest": "api/stable.py"
     }
-  ]
+  ],
+  "env": {
+    "PYTHON_VERSION": "3.12"
+  },
+  "functions": {
+    "api/stable.py": {
+      "runtime": "@vercel/python@3.12"
+    }
+  }
 }
