@@ -2,14 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/templates.py",
+      "src": "api/stable.py",
       "use": "@vercel/python"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "api/templates.py"
+      "dest": "api/stable.py"
     }
   ]
 }
