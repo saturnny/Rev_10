@@ -1,2 +1,4 @@
-# Ultra-minimal requirements for stability
-# No dependencies needed for pure Python handler
+fastapi
+uvicorn
+jinja2
+python-multipart

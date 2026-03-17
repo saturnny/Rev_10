@@ -47,6 +47,11 @@ templates = Jinja2Templates(directory=os.path.join(project_root, "templates"))
 async def login_page(request: Request):
     return templates.TemplateResponse("login_new.html", {"request": request})
 
+@app.get("/api/test")
+async def test_deploy():
+    """Test endpoint para verificar se deploy funciona"""
+    return {"msg": "deploy funcionando", "status": "ok"}
+
 @app.get("/api", response_class=HTMLResponse)
 async def api_info():
     return {"message": "Time Tracking System API", "version": "1.0.0"}
@@ -461,7 +466,3 @@ async def excluir_categoria_route(
 ):
     delete_categoria(db, categoria_id=categoria_id)
     return RedirectResponse(url="/admin/categorias", status_code=status.HTTP_303_SEE_OTHER)
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8001, reload=True)

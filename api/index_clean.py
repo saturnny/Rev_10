@@ -1,6 +1,4 @@
 """
-Vercel-compatible FastAPI application
-Standard """
 Vercel Serverless Function - FastAPI Standard Entry Point
 Following ChatGPT's recommendations for Vercel compatibility
 """
