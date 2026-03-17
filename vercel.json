@@ -1,8 +1,14 @@
 {
   "functions": {
-    "api/index.js": {}
+    "api/index.js": {
+      "memory": 1024
+    }
   },
   "routes": [
+    {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
     {
       "src": "/(.*)",
       "dest": "api/index.js"
