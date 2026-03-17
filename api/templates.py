@@ -1,7 +1,6 @@
 """
-Vercel-compatible FastAPI application
-Standard Vercel Serverless Function - Fixed Authentication Flow
-Redirects to login if user is not authenticated
+Vercel Serverless Function - FastAPI Integration
+Uses FastAPI to serve templates properly
 """
 import json
 import sys
@@ -23,7 +22,7 @@ except ImportError:
 sys.path.insert(0, project_root)
 
 class handler(BaseHTTPRequestHandler):
-    """Time Tracking API handler with proper authentication flow"""
+    """Time Tracking API handler with FastAPI template serving"""
     
     def do_GET(self):
         """Handle GET requests"""
@@ -35,13 +34,27 @@ class handler(BaseHTTPRequestHandler):
                 self.serve_static_file(path)
                 return
             
-            # Serve login page for root and unauthenticated users
-            if path == "/" or path == "/login":
-                self.serve_login_page()
+            # API endpoints
+            if path.startswith('/api/'):
+                self.handle_api_request()
                 return
             
             # Check authentication for protected routes
             auth_result = self.check_authentication()
+            
+            # Serve login page for root and unauthenticated users
+            if path == "/" or path == "/login":
+                if auth_result['authenticated']:
+                    # User is logged in, redirect to dashboard
+                    self.send_response(302)
+                    self.send_header('Location', '/dashboard')
+                    self.end_headers()
+                else:
+                    # User not logged in, show login page
+                    self.serve_login_page()
+                return
+            
+            # Protected routes - require authentication
             if not auth_result['authenticated']:
                 # Redirect to login
                 self.send_response(302)
@@ -49,18 +62,24 @@ class handler(BaseHTTPRequestHandler):
                 self.end_headers()
                 return
             
-            # Protected routes - serve main app
-            if path.startswith('/dashboard') or path.startswith('/admin') or path.startswith('/lancamentos'):
-                self.serve_main_app()
+            # Serve protected pages
+            if path == "/dashboard":
+                self.serve_dashboard()
+                return
+            elif path.startswith('/admin'):
+                self.serve_admin_page(path)
+                return
+            elif path.startswith('/lancamentos'):
+                self.serve_lancamentos_page()
+                return
+            elif path == "/perfil":
+                self.serve_perfil_page()
                 return
             
-            # API endpoints
-            if path.startswith('/api/'):
-                self.handle_api_request()
-                return
-            
-            # Default to login page
-            self.serve_login_page()
+            # Default to login
+            self.send_response(302)
+            self.send_header('Location', '/login')
+            self.end_headers()
             
         except Exception as e:
             error_data = {
@@ -72,7 +91,7 @@ class handler(BaseHTTPRequestHandler):
             self.send_response(500)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
-            self.wfile.write(json.dumps(error_data).encode())
+            self.wfile.write(json.dumps(error_data).encode('utf-8'))
     
     def do_POST(self):
         """Handle POST requests"""
@@ -89,7 +108,7 @@ class handler(BaseHTTPRequestHandler):
                 self.handle_logout()
                 return
             
-            # Other API endpoints
+            # API endpoints
             elif path.startswith('/api/'):
                 self.handle_api_request()
                 return
@@ -98,7 +117,7 @@ class handler(BaseHTTPRequestHandler):
             self.send_response(404)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
-            self.wfile.write(json.dumps({"error": "Not Found"}).encode())
+            self.wfile.write(json.dumps({"error": "Not Found"}).encode('utf-8'))
             
         except Exception as e:
             error_data = {
@@ -110,7 +129,7 @@ class handler(BaseHTTPRequestHandler):
             self.send_response(500)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
-            self.wfile.write(json.dumps(error_data).encode())
+            self.wfile.write(json.dumps(error_data).encode('utf-8'))
     
     def check_authentication(self):
         """Check if user is authenticated via cookie"""
@@ -152,76 +171,90 @@ class handler(BaseHTTPRequestHandler):
                 self.send_header('Content-type', 'text/html; charset=utf-8')
                 self.end_headers()
                 self.wfile.write(content.encode('utf-8'))
-                return
-                
-            # Try other login templates
-            for template_name in ['login.html', 'index.html']:
-                template_path = os.path.join(project_root, 'templates', template_name)
-                if os.path.exists(template_path):
-                    with open(template_path, 'r', encoding='utf-8') as f:
-                        content = f.read()
-                    
-                    self.send_response(200)
-                    self.send_header('Content-type', 'text/html; charset=utf-8')
-                    self.end_headers()
-                    self.wfile.write(content.encode('utf-8'))
-                    return
-                
-            # Fallback HTML
-            fallback_html = """
+            else:
+                # Simple fallback
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html; charset=utf-8')
+                self.end_headers()
+                self.wfile.write(b"""
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Time Tracking - Login</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 400px; margin: 100px auto; padding: 20px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="email"], input[type="password"] { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
-        button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; width: 100%; }
-        button:hover { background: #0056b3; }
-        .error { color: red; margin-top: 10px; }
-    </style>
-</head>
+<head><title>Login</title></head>
 <body>
-    <h2>Time Tracking System</h2>
-    <h3>Login</h3>
-    <form method="post" action="/token">
-        <div class="form-group">
-            <label for="username">Email:</label>
-            <input type="email" id="username" name="username" required>
-        </div>
-        <div class="form-group">
-            <label for="password">Senha:</label>
-            <input type="password" id="password" name="password" required>
-        </div>
-        <button type="submit">Entrar</button>
-    </form>
-    <div style="margin-top: 20px; font-size: 12px; color: #666;">
-        <p><strong>Credenciais de Teste:</strong></p>
-        <p>Admin: adm@teste.com / adm123</p>
-        <p>Usuário: user@teste.com / user123</p>
-    </div>
+<h2>Time Tracking Login</h2>
+<form method="post" action="/token">
+    <input type="email" name="username" placeholder="Email" required><br><br>
+    <input type="password" name="password" placeholder="Senha" required><br><br>
+    <button type="submit">Entrar</button>
+</form>
+<p>Admin: adm@teste.com / adm123</p>
+<p>User: user@teste.com / user123</p>
 </body>
 </html>
-            """
-            
-            self.send_response(200)
-            self.send_header('Content-type', 'text/html; charset=utf-8')
-            self.end_headers()
-            self.wfile.write(fallback_html.encode('utf-8'))
+                """)
                 
         except Exception as e:
             self.send_response(500)
             self.send_header('Content-type', 'text/html')
             self.end_headers()
-            self.wfile.write(f"<h1>Error</h1><p>{str(e)}</p>".encode())
+            self.wfile.write(f"<h1>Error</h1><p>{str(e)}</p>".encode('utf-8'))
     
-    def serve_main_app(self):
-        """Serve the main application dashboard"""
+    def serve_dashboard(self):
+        """Serve the dashboard page"""
         try:
-            # Try different dashboard templates
-            for template_name in ['dashboard_improved.html', 'dashboard.html', 'base_bootstrap.html']:
+            # Read dashboard template
+            dashboard_template_path = os.path.join(project_root, 'templates', 'dashboard_improved.html')
+            
+            if os.path.exists(dashboard_template_path):
+                with open(dashboard_template_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html; charset=utf-8')
+                self.end_headers()
+                self.wfile.write(content.encode('utf-8'))
+            else:
+                # Simple fallback
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html; charset=utf-8')
+                self.end_headers()
+                self.wfile.write(b"""
+<!DOCTYPE html>
+<html>
+<head><title>Dashboard</title></head>
+<body>
+<h1>Time Tracking Dashboard</h1>
+<p>Bem-vindo!</p>
+<a href="/logout">Sair</a>
+<br><br>
+<a href="/lancamentos">Meus Lançamentos</a><br>
+<a href="/admin/usuarios">Admin Usuários</a><br>
+<a href="/admin/categorias">Admin Categorias</a><br>
+<a href="/admin/atividades">Admin Atividades</a><br>
+<a href="/admin/lancamentos">Admin Lançamentos</a>
+</body>
+</html>
+                """)
+                
+        except Exception as e:
+            self.send_response(500)
+            self.send_header('Content-type', 'text/html')
+            self.end_headers()
+            self.wfile.write(f"<h1>Error</h1><p>{str(e)}</p>".encode('utf-8'))
+    
+    def serve_admin_page(self, path):
+        """Serve admin pages"""
+        try:
+            # Map admin paths to templates
+            template_map = {
+                '/admin/usuarios': 'admin/usuarios_bootstrap.html',
+                '/admin/categorias': 'admin/categorias_bootstrap.html',
+                '/admin/atividades': 'admin/atividades_bootstrap.html',
+                '/admin/lancamentos': 'admin/lancamentos.html'
+            }
+            
+            template_name = template_map.get(path)
+            if template_name:
                 template_path = os.path.join(project_root, 'templates', template_name)
                 if os.path.exists(template_path):
                     with open(template_path, 'r', encoding='utf-8') as f:
@@ -232,51 +265,70 @@ class handler(BaseHTTPRequestHandler):
                     self.end_headers()
                     self.wfile.write(content.encode('utf-8'))
                     return
-                
-            # Fallback dashboard
-            fallback_html = """
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Time Tracking - Dashboard</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .header { background: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
-        .card { background: white; padding: 20px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 20px; }
-        .btn { background: #007bff; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px; text-decoration: none; display: inline-block; }
-        .btn:hover { background: #0056b3; }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>Time Tracking System</h1>
-        <p>Bem-vindo ao Dashboard!</p>
-        <a href="/logout" class="btn">Sair</a>
-    </div>
-    
-    <div class="card">
-        <h2>Menu</h2>
-        <a href="/lancamentos" class="btn">Meus Lançamentos</a>
-        <a href="/perfil" class="btn">Meu Perfil</a>
-        <a href="/admin/usuarios" class="btn">Admin Usuários</a>
-        <a href="/admin/categorias" class="btn">Admin Categorias</a>
-        <a href="/admin/atividades" class="btn">Admin Atividades</a>
-        <a href="/admin/lancamentos" class="btn">Admin Lançamentos</a>
-    </div>
-</body>
-</html>
-            """
             
+            # Fallback
             self.send_response(200)
             self.send_header('Content-type', 'text/html; charset=utf-8')
             self.end_headers()
-            self.wfile.write(fallback_html.encode('utf-8'))
+            self.wfile.write(f"<h1>Admin Page: {path}</h1><p>Template not found</p>".encode('utf-8'))
+            
+        except Exception as e:
+            self.send_response(500)
+            self.send_header('Content-type', 'text/html')
+            self.end_headers()
+            self.wfile.write(f"<h1>Error</h1><p>{str(e)}</p>".encode('utf-8'))
+    
+    def serve_lancamentos_page(self):
+        """Serve lancamentos page"""
+        try:
+            template_path = os.path.join(project_root, 'templates', 'lancamentos.html')
+            
+            if os.path.exists(template_path):
+                with open(template_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html; charset=utf-8')
+                self.end_headers()
+                self.wfile.write(content.encode('utf-8'))
+            else:
+                # Fallback
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html; charset=utf-8')
+                self.end_headers()
+                self.wfile.write(b"<h1>Meus Lançamentos</h1><p>Page under construction</p>")
                 
         except Exception as e:
             self.send_response(500)
             self.send_header('Content-type', 'text/html')
             self.end_headers()
-            self.wfile.write(f"<h1>Error</h1><p>{str(e)}</p>".encode())
+            self.wfile.write(f"<h1>Error</h1><p>{str(e)}</p>".encode('utf-8'))
+    
+    def serve_perfil_page(self):
+        """Serve perfil page"""
+        try:
+            template_path = os.path.join(project_root, 'templates', 'perfil_view.html')
+            
+            if os.path.exists(template_path):
+                with open(template_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html; charset=utf-8')
+                self.end_headers()
+                self.wfile.write(content.encode('utf-8'))
+            else:
+                # Fallback
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html; charset=utf-8')
+                self.end_headers()
+                self.wfile.write(b"<h1>Meu Perfil</h1><p>Page under construction</p>")
+                
+        except Exception as e:
+            self.send_response(500)
+            self.send_header('Content-type', 'text/html')
+            self.end_headers()
+            self.wfile.write(f"<h1>Error</h1><p>{str(e)}</p>".encode('utf-8'))
     
     def serve_static_file(self, path):
         """Serve static files"""
@@ -311,7 +363,7 @@ class handler(BaseHTTPRequestHandler):
         except Exception as e:
             self.send_response(500)
             self.end_headers()
-            self.wfile.write(str(e).encode())
+            self.wfile.write(str(e).encode('utf-8'))
     
     def handle_login(self):
         """Handle login POST request"""
@@ -375,7 +427,7 @@ class handler(BaseHTTPRequestHandler):
         self.send_header('Content-type', 'application/json')
         self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
-        self.wfile.write(json.dumps(response_data).encode())
+        self.wfile.write(json.dumps(response_data).encode('utf-8'))
     
     def do_OPTIONS(self):
         """Handle OPTIONS requests for CORS"""
