@@ -1,13 +1,13 @@
 {
   "functions": {
-    "api/index_clean.py": {
-      "runtime": "python3.11"
+    "api/simple_test.py": {
+      "runtime": "@vercel/python@3.11.0"
     }
   },
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "api/index_clean.py"
+      "dest": "api/simple_test.py"
     }
   ]
 }
