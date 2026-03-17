@@ -1,2 +1,2 @@
-# Vercel Python Runtime - No dependencies needed for pure Python
-# This file is required but can be empty for pure Python functions
+# Vercel Python Runtime - Dependencies for serverless functions
+python-dotenv==1.0.0

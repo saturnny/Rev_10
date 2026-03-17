@@ -4,6 +4,18 @@ Maximum compatibility with Vercel platform
 """
 import json
 import sys
+import os
+
+# Load environment variables from .env if exists
+try:
+    from dotenv import load_dotenv
+    # Try to load .env from project root
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    load_dotenv(os.path.join(project_root, '.env'))
+    load_dotenv(os.path.join(project_root, '.env.vercel'))
+except ImportError:
+    # dotenv not available, continue without it
+    pass
 
 def handler(request):
     """
@@ -15,7 +27,12 @@ def handler(request):
         debug_info = {
             "request_type": type(request).__name__,
             "request_keys": list(request.keys()) if isinstance(request, dict) else "not_dict",
-            "python_version": sys.version
+            "python_version": sys.version,
+            "env_vars": {
+                "database_url_exists": bool(os.environ.get("DATABASE_URL")),
+                "secret_key_exists": bool(os.environ.get("SECRET_KEY")),
+                "python_path": sys.path[:3]
+            }
         }
         
         # Handle different request formats
@@ -58,11 +75,21 @@ def handler(request):
                 "debug": debug_info
             }
             
+        elif path == "/api/env":
+            # Test environment variables
+            response_data = {
+                "environment_test": "ok",
+                "database_url": os.environ.get("DATABASE_URL", "NOT_FOUND"),
+                "database_url_length": len(os.environ.get("DATABASE_URL", "")),
+                "secret_key": os.environ.get("SECRET_KEY", "NOT_FOUND"),
+                "debug": debug_info
+            }
+            
         else:
             response_data = {
                 "error": "Not Found",
                 "message": f"Path {path} not found",
-                "available_paths": ["/", "/api", "/api/health", "/api/test"],
+                "available_paths": ["/", "/api", "/api/health", "/api/test", "/api/env"],
                 "debug": debug_info
             }
             return {
