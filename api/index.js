@@ -37,8 +37,30 @@ app.use('/admin', adminRoutes);
 app.use('/api', apiRoutes);
 
 // Health check endpoint
-app.get('/api/test', (req, res) => {
-  res.json({ msg: 'deploy funcionando', status: 'ok' });
+app.get('/api/test', async (req, res) => {
+  try {
+    // Testar conexão com banco
+    const { sequelize } = require('./models/database');
+    await sequelize.authenticate();
+    
+    res.json({ 
+      msg: 'deploy funcionando', 
+      status: 'ok',
+      database: 'connected',
+      env: process.env.NODE_ENV || 'development',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Health check error:', error);
+    res.status(500).json({ 
+      msg: 'erro na conexão', 
+      status: 'error',
+      database: 'disconnected',
+      error: error.message,
+      env: process.env.NODE_ENV || 'development',
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // Root route handled by dashboardRoutes.get('/')
@@ -51,10 +73,33 @@ app.use('*', (req, res) => {
 // Error handler
 app.use((err, req, res, next) => {
   console.error('Error:', err);
+  
+  // Em produção, não enviar stack trace
+  const isDev = process.env.NODE_ENV === 'development';
+  
+  // Erro de conexão com banco
+  if (err.name === 'SequelizeConnectionError' || err.name === 'SequelizeConnectionRefusedError') {
+    return res.status(500).json({ 
+      error: 'Database Connection Error', 
+      message: 'Unable to connect to database. Please check DATABASE_URL environment variable.',
+      ...(isDev && { stack: err.stack })
+    });
+  }
+  
+  // Erro de JWT
+  if (err.name === 'JsonWebTokenError') {
+    return res.status(401).json({ 
+      error: 'Authentication Error', 
+      message: 'Invalid token',
+      ...(isDev && { stack: err.stack })
+    });
+  }
+  
+  // Erro genérico
   res.status(500).json({ 
     error: 'Internal Server Error', 
     message: err.message,
-    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    ...(isDev && { stack: err.stack })
   });
 });
 
