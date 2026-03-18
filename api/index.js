@@ -2,6 +2,7 @@
  * Vercel Serverless Function - Node.js Entry Point
  * Time Tracking System - Node.js Version
  */
+require('dotenv').config();
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
@@ -30,8 +31,8 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '../templates'));
 
 // Routes
-app.use('/', authRoutes);
-app.use('/dashboard', dashboardRoutes);
+app.use('/', authRoutes.router);
+app.use('/', dashboardRoutes);
 app.use('/admin', adminRoutes);
 app.use('/api', apiRoutes);
 
@@ -40,15 +41,7 @@ app.get('/api/test', (req, res) => {
   res.json({ msg: 'deploy funcionando', status: 'ok' });
 });
 
-// Root route - redirect to login or dashboard
-app.get('/', (req, res) => {
-  const token = req.cookies.access_token;
-  if (token) {
-    res.redirect('/dashboard');
-  } else {
-    res.redirect('/login');
-  }
-});
+// Root route handled by dashboardRoutes.get('/')
 
 // 404 handler
 app.use('*', (req, res) => {

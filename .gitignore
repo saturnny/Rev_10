@@ -1,0 +1,9 @@
+# Local Environment
+.env.local
+
+# Vercel Environment  
+.env.vercel
+
+# Git (não versionar)
+.env
+.env.*.local

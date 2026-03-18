@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Time Tracking System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background-color: #3d0202;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .login-header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-login:hover {
+            background: #0056b3;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
+        }
+
+        .test-info {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 12px;
+        }
+
+        .test-info h4 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .test-info p {
+            margin: 5px 0;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>⏱ Time Tracking</h1>
+            <p>Sistema de Controle de Ponto</p>
+        </div>
+
+        <% if (typeof error !== 'undefined' && error) { %>
+            <div class="alert-danger">
+                <%= error %>
+            </div>
+        <% } %>
+
+        <form method="post" action="/token">
+            <div class="form-group">
+                <label for="username">Email:</label>
+                <input type="email" id="username" name="username" placeholder="Digite seu email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Senha:</label>
+                <input type="password" id="password" name="password" placeholder="Digite sua senha" required>
+            </div>
+
+            <button type="submit" class="btn-login">Entrar</button>
+        </form>
+
+        <div class="test-info">
+            <h4>🧪 Credenciais de Teste:</h4>
+            <p><strong>Admin:</strong> adm@teste.com / adm123</p>
+            <p><strong>Usuário:</strong> user@teste.com / user123</p>
+        </div>
+    </div>
+</body>
+</html>

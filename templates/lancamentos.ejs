@@ -1,17 +1,12 @@
-{% extends "base_bootstrap.html" %}
+<%- include('header_bootstrap', {title: 'Meus Lançamentos'}) %>
 
-{% block title %}Meus Lançamentos{% endblock %}
-
-{% block header %}
 <div class="topbar">
     <div class="topbar-title">
         <h1>Meus Lançamentos</h1>
         <p>Gerencie todos os seus lançamentos de atividades</p>
     </div>
 </div>
-{% endblock %}
-
-{% block content %}
+<div class="row">
 <!-- Filtro de Data -->
 <div class="card mb-4">
     <div class="card-body">
@@ -75,7 +70,7 @@
         <p class="card-description">Visualize e gerencie todos os seus lançamentos</p>
     </div>
 
-    {% if lancamentos %}
+    <% if (typeof lancamentos !== 'undefined' && lancamentos.length > 0) { %>
     <div class="table-responsive">
         <table class="table table-hover align-middle" id="tabela-lancamentos">
             <thead>
@@ -89,21 +84,21 @@
                 </tr>
             </thead>
             <tbody>
-                {% for lancamento in lancamentos %}
-                <tr data-data="{{ lancamento.data.strftime('%Y-%m-%d') }}">
+                <% lancamentos.forEach(function(lancamento) { %>
+                <tr data-data="<%= (lancamento.data) ? new Date(lancamento.data).toISOString().split('T')[0] : '' %>">
                     <td>
-                        <span class="badge bg-light text-dark">{{ lancamento.data.strftime('%d/%m/%Y') }}</span>
+                        <span class="badge bg-light text-dark"><%= (lancamento.data) ? new Date(lancamento.data).toLocaleDateString('pt-BR') : '-' %></span>
                     </td>
-                    <td>{{ lancamento.hora_inicio.strftime('%H:%M') }}</td>
-                    <td>{{ lancamento.hora_fim.strftime('%H:%M') }}</td>
+                    <td><%= lancamento.hora_inicio %></td>
+                    <td><%= lancamento.hora_fim %></td>
                     <td>
                         <div class="d-flex align-items-center gap-2">
-                            <span class="badge bg-primary">{{ lancamento.atividade.nome }}</span>
-                            <small class="text-muted">{{ lancamento.atividade.categoria.nome }}</small>
+                            <span class="badge bg-primary"><%= (lancamento.Atividade) ? lancamento.Atividade.nome : (lancamento.atividade ? lancamento.atividade.nome : '-') %></span>
+                            <small class="text-muted"><%= (lancamento.Atividade && lancamento.Atividade.Categoria) ? lancamento.Atividade.Categoria.nome : (lancamento.atividade && lancamento.atividade.categoria ? lancamento.atividade.categoria.nome : '-') %></small>
                         </div>
                     </td>
                     <td>
-                        <span class="badge bg-success">{{ "%.1f"|format(lancamento.duracao_horas) }}h</span>
+                        <span class="badge bg-success"><%= (lancamento.duracao_horas || 0).toFixed(1) %>h</span>
                     </td>
                     <td>
                         <div class="btn-group" role="group">
@@ -111,31 +106,31 @@
                                    data-bs-toggle="tooltip" 
                                    data-bs-placement="top" 
                                    title="Editar lançamento"
-                                   data-id="{{ lancamento.id }}"
-                                   data-data="{{ lancamento.data.strftime('%Y-%m-%d') }}"
-                                   data-inicio="{{ lancamento.hora_inicio.strftime('%H:%M') }}"
-                                   data-fim="{{ lancamento.hora_fim.strftime('%H:%M') }}"
-                                   data-atividade="{{ lancamento.atividade.id }}"
-                                   data-observacao="{{ lancamento.observacao|default('') }}"
-                                   onclick="openEditModal('{{ lancamento.id }}')">
+                                   data-id="<%= lancamento.id %>"
+                                   data-data="<%= (lancamento.data) ? new Date(lancamento.data).toISOString().split('T')[0] : '' %>"
+                                   data-inicio="<%= lancamento.hora_inicio %>"
+                                   data-fim="<%= lancamento.hora_fim %>"
+                                   data-atividade="<%= (lancamento.Atividade) ? lancamento.Atividade.id : (lancamento.atividade ? lancamento.atividade.id : '') %>"
+                                   data-observacao="<%= lancamento.observacao || '' %>"
+                                   onclick="openEditModal('<%= lancamento.id %>')">
                                 <i class="bi bi-pencil"></i>
                             </button>
                             <button class="btn btn-sm btn-outline-danger delete-btn-caneta" 
                                     data-bs-toggle="tooltip" 
                                     data-bs-placement="top" 
                                     title="Excluir lançamento"
-                                    data-id="{{ lancamento.id }}"
-                                   onclick="deleteLancamento('{{ lancamento.id }}')">
+                                    data-id="<%= lancamento.id %>"
+                                   onclick="deleteLancamento('<%= lancamento.id %>')">
                                 <i class="bi bi-trash"></i>
                             </button>
                         </div>
                     </td>
                 </tr>
-                {% endfor %}
+                <% }); %>
             </tbody>
         </table>
     </div>
-    {% else %}
+    <% } else { %>
     <div class="card-body text-center py-5">
         <div class="empty-state">
             <div class="empty-state-icon">
@@ -145,15 +140,15 @@
             <div class="empty-state-description">
                 Você ainda não possui lançamentos de atividades registrados.
             </div>
-            {% if user.tipo_usuario != "Admin" %}
+            <% if (user.tipo_usuario !== "Admin") { %>
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newLancamentoModal">
                 <i class="bi bi-plus-circle me-1"></i>
                 Adicionar Primeira Atividade
             </button>
-            {% endif %}
+            <% } %>
         </div>
     </div>
-    {% endif %}
+    <% } %>
 </div>
 
 <!-- Modal Novo Lançamento -->
@@ -210,11 +205,13 @@
                         </label>
                         <select id="modal_atividade_id" name="atividade_id" class="form-select" required>
                             <option value="">Selecione uma atividade</option>
-                            {% for atividade in atividades %}
-                            <option value="{{ atividade.id }}">
-                                {{ atividade.nome }} ({{ atividade.categoria.nome }})
+                            <% if (typeof atividades !== 'undefined') { %>
+                                <% atividades.forEach(function(atividade) { %>
+                            <option value="<%= atividade.id %>">
+                                <%= atividade.nome %> (<%= (atividade.Categoria) ? atividade.Categoria.nome : (atividade.categoria ? atividade.categoria.nome : '-') %>)
                             </option>
-                            {% endfor %}
+                                <% }); %>
+                            <% } %>
                         </select>
                         <div class="invalid-feedback">
                             Por favor, selecione uma atividade.
@@ -293,9 +290,10 @@
         </div>
     </div>
 </div>
-{% endblock %}
+</div>
+<%- include('footer_bootstrap') %>
 
-{% block extra_css %}
+
 <style>
 /* Stats Grid */
 .stats-grid {
@@ -480,9 +478,9 @@
     }
 }
 </style>
-{% endblock %}
 
-{% block extra_js %}
+
+
 <script src="/static/js/notifications.js"></script>
 <script>
 // Filtro de data
@@ -926,4 +924,4 @@ function showNotification(message, type = 'info') {
     });
 })();
 </script>
-{% endblock %}
+

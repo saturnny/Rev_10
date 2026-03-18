@@ -1,43 +1,37 @@
-{% extends "base_bootstrap.html" %}
+<%- include('../header_bootstrap', {title: 'Gerenciar Usuários - ' + user.nome}) %>
 
-{% block title %}Gerenciar Usuários - {{ user.nome }}{% endblock %}
-
-{% block header %}
 <div class="topbar">
     <div class="topbar-title">
-        <h1>Gerenciamento de Usuários</h1>
-        <p>Administre os usuários do sistema</p>
+        <h1 style="font-weight: 700; color: #333;">Gerenciamento de Usuários</h1>
+        <p style="color: #666;">Administre os usuários do sistema</p>
     </div>
     <div class="d-flex gap-2">
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#userModal">
+        <button class="btn" style="background-color: #A00000; color: white; border-radius: 8px; font-weight: 500; padding: 10px 20px;" data-bs-toggle="modal" data-bs-target="#userModal">
             <i class="bi bi-person-plus me-1"></i>
             Novo Usuário
         </button>
     </div>
 </div>
-{% endblock %}
-
-{% block content %}
 <!-- Filters -->
-<div class="card mb-4">
-    <div class="card-body">
-        <h5 class="card-title">
-            <i class="bi bi-funnel me-2"></i>
+<div class="card mb-4" style="border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 12px;">
+    <div class="card-body p-4">
+        <h5 class="card-title mb-4" style="font-weight: 700; color: #333; display: flex; align-items: center; gap: 10px;">
+            <i class="bi bi-funnel" style="font-size: 1.2rem;"></i>
             Filtros
         </h5>
         <div class="row g-3">
             <div class="col-md-4">
-                <input type="text" class="form-control" placeholder="Buscar por nome ou email" id="searchInput">
+                <input type="text" class="form-control" style="border-radius: 8px; padding: 10px 15px; border: 1px solid #ddd;" placeholder="Buscar por nome ou email" id="searchInput">
             </div>
             <div class="col-md-4">
-                <select class="form-select" id="typeFilter">
+                <select class="form-select" style="border-radius: 8px; padding: 10px 15px; border: 1px solid #ddd;" id="typeFilter">
                     <option value="">Todos os tipos</option>
                     <option value="Admin">Administrador</option>
                     <option value="Usuario">Usuário</option>
                 </select>
             </div>
             <div class="col-md-2">
-                <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                <button class="btn w-100" style="background-color: #f8f9fa; color: #666; border: 1px solid #ddd; border-radius: 8px; padding: 10px;" onclick="clearFilters()">
                     <i class="bi bi-x-circle me-1"></i>
                     Limpar
                 </button>
@@ -47,75 +41,73 @@
 </div>
 
 <!-- Users Table -->
-<div class="card">
-    <div class="card-header">
-        <h2 class="card-title">
-            <i class="bi bi-people me-2"></i>
+<div class="card" style="border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 12px; overflow: hidden;">
+    <div class="card-header bg-white border-0 p-4 pb-0">
+        <h5 class="card-title mb-1" style="font-weight: 700; color: #333; display: flex; align-items: center; gap: 10px;">
+            <i class="bi bi-people" style="font-size: 1.2rem;"></i>
             Usuários Cadastrados
-        </h2>
-        <p class="card-description">{{ usuarios|length }} usuários encontrados</p>
+        </h5>
+        <p class="text-muted small"><%= (typeof usuarios !== 'undefined' ? usuarios.length : 0) %> usuários encontrados</p>
     </div>
 
-    {% if usuarios %}
+    <% if (typeof usuarios !== 'undefined' && usuarios.length > 0) { %>
     <div class="table-responsive">
-        <table class="table table-hover align-middle" id="usersTable">
-            <thead>
+        <table class="table table-hover align-middle mb-0" id="usersTable">
+            <thead style="background-color: #f1f4f9;">
                 <tr>
-                    <th><i class="bi bi-person me-1"></i>Usuário</th>
-                    <th><i class="bi bi-envelope me-1"></i>Email</th>
-                    <th><i class="bi bi-briefcase me-1"></i>Gestão</th>
-                    <th><i class="bi bi-geo-alt me-1"></i>Área</th>
-                    <th><i class="bi bi-people me-1"></i>Equipe</th>
-                    <th><i class="bi bi-award me-1"></i>Especialidade</th>
-                    <th><i class="bi bi-shield me-1"></i>Tipo</th>
-                    <th style="width: 150px;"><i class="bi bi-gear me-1"></i>Ações</th>
+                    <th style="padding: 15px 20px; font-weight: 600; color: #555; border: none;"><i class="bi bi-person me-1"></i>Usuário</th>
+                    <th style="padding: 15px 20px; font-weight: 600; color: #555; border: none;"><i class="bi bi-envelope me-1"></i>Email</th>
+                    <th style="padding: 15px 20px; font-weight: 600; color: #555; border: none;"><i class="bi bi-briefcase me-1"></i>Gestão</th>
+                    <th style="padding: 15px 20px; font-weight: 600; color: #555; border: none;"><i class="bi bi-geo-alt me-1"></i>Área</th>
+                    <th style="padding: 15px 20px; font-weight: 600; color: #555; border: none;"><i class="bi bi-people me-1"></i>Equipe</th>
+                    <th style="padding: 15px 20px; font-weight: 600; color: #555; border: none;"><i class="bi bi-award me-1"></i>Especialidade</th>
+                    <th style="padding: 15px 20px; font-weight: 600; color: #555; border: none;"><i class="bi bi-shield me-1"></i>Tipo</th>
+                    <th style="padding: 15px 20px; font-weight: 600; color: #555; border: none; width: 150px;"><i class="bi bi-gear me-1"></i>Ações</th>
                 </tr>
             </thead>
             <tbody>
-                {% for usuario in usuarios %}
-                <tr class="user-row" data-name="{{ usuario.nome|lower }}" data-email="{{ usuario.email|lower }}" 
-                    data-type="{{ usuario.tipo_usuario }}">
-                    <td>
+                <% usuarios.forEach(function(usuario) { %>
+                <tr class="user-row" data-name="<%= usuario.nome.toLowerCase() %>" data-email="<%= usuario.email.toLowerCase() %>" 
+                    data-type="<%= usuario.tipo_usuario %>">
+                    <td style="padding: 15px 20px;">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="avatar avatar-sm bg-primary">{{ usuario.nome[:2].upper() }}</div>
+                            <div class="avatar avatar-sm" style="background-color: #8b0000; color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600;"><%= usuario.nome.substring(0, 2).toUpperCase() %></div>
                             <div>
-                                <div class="fw-semibold">{{ usuario.nome }}</div>
-                                <small class="text-muted">ID: {{ usuario.id }}</small>
+                                <div class="fw-bold" style="color: #333;"><%= usuario.nome %></div>
+                                <small class="text-muted">ID: <%= usuario.id %></small>
                             </div>
                         </div>
                     </td>
-                    <td>{{ usuario.email }}</td>
-                    <td>{{ usuario.gestao or '-' }}</td>
-                    <td>{{ usuario.area or '-' }}</td>
-                    <td>{{ usuario.equipe or '-' }}</td>
-                    <td>{{ usuario.especialidade or '-' }}</td>
-                    <td>
-                        <span class="badge bg-{{ 'warning' if usuario.tipo_usuario == 'Admin' else 'secondary' }}">
-                            {{ usuario.tipo_usuario }}
+                    <td><%= usuario.email %></td>
+                    <td><%= usuario.gestao || '-' %></td>
+                    <td><%= usuario.area || '-' %></td>
+                    <td><%= usuario.equipe || '-' %></td>
+                    <td><%= usuario.especialidade || '-' %></td>
+                    <td style="padding: 15px 20px;">
+                        <span class="badge" style="background-color: #94a3b8; color: white; font-weight: 500; border-radius: 20px; padding: 5px 12px; font-size: 0.75rem;">
+                            <%= usuario.tipo_usuario %>
                         </span>
                     </td>
-                    <td>
-                        <div class="btn-group" role="group">
-                            <button class="btn btn-sm btn-outline-primary" 
-                                    onclick="editUser({{ usuario.id }})"
+                    <td style="padding: 15px 20px;">
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm" style="border: 1px solid #eca9a9; color: #dc3545; background: white; width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;"
+                                    onclick="editUser(<%= usuario.id %>)"
                                     data-bs-toggle="tooltip" 
-                                    data-bs-placement="top" 
                                     title="Editar usuário">
                                 <i class="bi bi-pencil"></i>
                             </button>
-                            {% if usuario.id != user.id %}
-                            <button class="btn btn-sm btn-outline-danger" 
-                                    onclick="deleteUser({{ usuario.id }})"
+                            <% if (usuario.id !== user.id) { %>
+                            <button class="btn btn-sm" style="border: 1px solid #eca9a9; color: #dc3545; background: white; width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;"
+                                    onclick="deleteUser(<%= usuario.id %>)"
                                     data-bs-toggle="tooltip" 
-                                    data-bs-placement="top" 
                                     title="Excluir usuário">
                                 <i class="bi bi-trash"></i>
                             </button>
-                            {% endif %}
+                            <% } %>
                         </div>
                     </td>
                 </tr>
-                {% endfor %}
+                <% }); %>
             </tbody>
         </table>
     </div>
@@ -125,15 +117,15 @@
             <div>
                 <span class="badge bg-secondary me-2">
                     <i class="bi bi-people me-1"></i>
-                    {{ usuarios|selectattr('tipo_usuario', 'equalto', 'Admin')|list|length }} administradores
+                    <%= (typeof usuarios !== 'undefined' ? usuarios.filter(u => u.tipo_usuario === 'Admin').length : 0) %> administradores
                 </span>
                 <span class="badge bg-secondary me-2">
                     <i class="bi bi-person me-1"></i>
-                    {{ usuarios|selectattr('tipo_usuario', 'equalto', 'Usuario')|list|length }} usuários comuns
+                    <%= (typeof usuarios !== 'undefined' ? usuarios.filter(u => u.tipo_usuario !== 'Admin').length : 0) %> usuários comuns
                 </span>
                 <span class="badge bg-success">
                     <i class="bi bi-people-fill me-1"></i>
-                    {{ usuarios|length }} total
+                    <%= (typeof usuarios !== 'undefined' ? usuarios.length : 0) %> total
                 </span>
             </div>
             <div>
@@ -144,7 +136,7 @@
             </div>
         </div>
     </div>
-    {% else %}
+    <% } else { %>
     <div class="card-body text-center py-5">
         <div class="empty-state">
             <div class="empty-state-icon">
@@ -160,7 +152,7 @@
             </button>
         </div>
     </div>
-    {% endif %}
+    <% } %>
 </div>
 
 <!-- User Modal -->
@@ -245,9 +237,6 @@
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
 <script>
     let editingUserId = null;
 
@@ -343,4 +332,4 @@
         });
     });
 </script>
-{% endblock %}
+<%- include('../footer_bootstrap') %>

@@ -11,8 +11,8 @@ async function seedDatabase() {
     await sequelize.authenticate();
     console.log('Database connected successfully.');
 
-    // Sync all models
-    await sequelize.sync({ force: false });
+    // Sync all models - force: true recria as tabelas
+    await sequelize.sync({ force: true });
     console.log('Database synced successfully.');
 
     // Check if users already exist

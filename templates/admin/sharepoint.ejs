@@ -1,17 +1,6 @@
-{% extends "base_bootstrap.html" %}
+<%- include('../header_bootstrap', {title: 'Integração SharePoint - ' + user.nome}) %>
 
-{% block title %}Integração SharePoint - {{ user.nome }}{% endblock %}
-
-{% block header %}
-<div class="topbar">
-    <div class="topbar-title">
-        <h1>Integração com SharePoint</h1>
-        <p>Sincronize dados com listas do SharePoint</p>
-    </div>
-</div>
-{% endblock %}
-
-{% block content %}
+<div class="row">
 <style>
 .sync-card {
     border: none;
@@ -103,19 +92,19 @@
                         Status da Integração
                     </h4>
                     <p class="text-muted mb-0">
-                        {% if configured %}
+                        <% if (typeof configured !== 'undefined' && configured) { %>
                             Integração configurada e pronta para uso
-                        {% else %}
+                        <% } else { %>
                             Configure as credenciais do SharePoint para iniciar a sincronização
-                        {% endif %}
+                        <% } %>
                     </p>
                 </div>
-                <span class="status-badge {% if configured %}configured{% else %}not-configured{% endif %}">
-                    {% if configured %}
+                <span class="status-badge <%= (typeof configured !== 'undefined' && configured) ? 'configured' : 'not-configured' %>">
+                    <% if (typeof configured !== 'undefined' && configured) { %>
                         <i class="bi bi-check-circle me-1"></i> Configurado
-                    {% else %}
+                    <% } else { %>
                         <i class="bi bi-exclamation-circle me-1"></i> Não Configurado
-                    {% endif %}
+                    <% } %>
                 </span>
             </div>
         </div>
@@ -123,7 +112,7 @@
 </div>
 
 <!-- Configuration Info -->
-{% if configured %}
+<% if (typeof configured !== 'undefined' && configured) { %>
 <div class="config-section">
     <h5 class="mb-3">
         <i class="bi bi-gear me-2"></i>
@@ -131,19 +120,19 @@
     </h5>
     <div class="config-item">
         <span class="config-label">Site do SharePoint</span>
-        <span class="config-value">{{ site_url }}</span>
+        <span class="config-value"><%= typeof site_url !== 'undefined' ? site_url : '' %></span>
     </div>
     <div class="config-item">
         <span class="config-label">Lista de Usuários</span>
-        <span class="config-value">{{ users_list }}</span>
+        <span class="config-value"><%= typeof users_list !== 'undefined' ? users_list : '' %></span>
     </div>
     <div class="config-item">
         <span class="config-label">Lista de Lançamentos</span>
-        <span class="config-value">{{ lancamentos_list }}</span>
+        <span class="config-value"><%= typeof lancamentos_list !== 'undefined' ? lancamentos_list : '' %></span>
     </div>
     <div class="config-item">
         <span class="config-label">Intervalo de Sincronização</span>
-        <span class="config-value">{{ sync_interval }} minutos</span>
+        <span class="config-value"><%= typeof sync_interval !== 'undefined' ? sync_interval : '' %> minutos</span>
     </div>
 </div>
 
@@ -209,22 +198,22 @@
             <i class="bi bi-clock-history me-2"></i>
             Agendamento Automático
         </h5>
-        {% if scheduler_status.running %}
+        <% if (typeof scheduler_status !== 'undefined' && scheduler_status.running) { %>
             <div class="alert alert-success">
                 <i class="bi bi-check-circle me-2"></i>
                 Sincronização automática está ativa
-                {% if scheduler_status.jobs %}
+                <% if (scheduler_status.jobs && scheduler_status.jobs.length > 0) { %>
                     <br><small class="ms-4">
-                        Próxima execução: {{ scheduler_status.jobs[0].next_run or 'Calculando...' }}
+                        Próxima execução: <%= scheduler_status.jobs[0].next_run || 'Calculando...' %>
                     </small>
-                {% endif %}
+                <% } %>
             </div>
-        {% else %}
+        <% } else { %>
             <div class="alert alert-warning">
                 <i class="bi bi-exclamation-triangle me-2"></i>
                 Sincronização automática está inativa
             </div>
-        {% endif %}
+        <% } %>
     </div>
 </div>
 
@@ -234,7 +223,7 @@
     <div id="syncResultsContent"></div>
 </div>
 
-{% else %}
+<% } else { %>
 <!-- Configuration Instructions -->
 <div class="config-section">
     <h5 class="mb-4">
@@ -272,7 +261,7 @@ SHAREPOINT_SYNC_INTERVAL_MINUTES=60</code></pre>
         <strong>Importante:</strong> Mantenha as credenciais seguras e não compartilhe o arquivo .env.
     </div>
 </div>
-{% endif %}
+<% } %>
 
 <script>
 function runSync(direction) {
@@ -382,4 +371,5 @@ function showSyncResults(results, type) {
 }
 </script>
 
-{% endblock %}
+</div>
+<%- include('../footer_bootstrap') %>

@@ -2,9 +2,9 @@
 
 :root {
   /* Cores Principais (Vermelhos) */
-  --color-primary: #B71C1C;
-  --color-primary-600: #C62828;
-  --color-primary-500: #D32F2F;
+  --color-primary: #8b0000;
+  --color-primary-600: #a00000;
+  --color-primary-500: #cc1414;
   --color-primary-100: #FFEBEE;
 
   /* Neutros */
@@ -21,7 +21,7 @@
   --color-info: #2563EB;
 
   /* Tipografia */
-  --font-family: "Inter", "Segoe UI", "Roboto", sans-serif;
+  --font-family: "Segoe UI", "Inter", "Roboto", sans-serif;
   --font-size-page-title: 26px;
   --font-weight-page-title: 700;
   --font-size-subtitle: 15px;
@@ -74,7 +74,7 @@ body {
 /* Sidebar */
 .sidebar {
   width: var(--sidebar-width);
-  background: linear-gradient(180deg, var(--color-primary) 0%, var(--color-primary-600) 100%);
+  background: var(--color-primary-500); /* Removed gradient to match image */
   color: white;
   position: fixed;
   height: 100vh;
@@ -83,19 +83,20 @@ body {
   overflow-y: auto;
   z-index: 1000;
   transition: transform var(--transition-normal);
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar-header {
-  padding: var(--spacing-card);
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding: 24px var(--spacing-card);
 }
 
 .sidebar-logo {
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 700;
 }
 
 .sidebar-logo-icon {
@@ -139,13 +140,14 @@ body {
 }
 
 .sidebar-item:hover {
-  background: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.1);
   color: white;
 }
 
 .sidebar-item.active {
-  background: rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.2);
   color: white;
+  font-weight: 600;
 }
 
 .sidebar-item.active::before {
@@ -156,7 +158,6 @@ body {
   bottom: 0;
   width: 4px;
   background: var(--color-surface);
-  border-radius: 0 2px 2px 0;
 }
 
 .sidebar-item-icon {
@@ -169,8 +170,10 @@ body {
 
 .sidebar-footer {
   padding: var(--spacing-card);
-  border-top: 1px solid rgba(255,255,255,0.1);
   margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .sidebar-user {

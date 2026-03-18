@@ -1,17 +1,6 @@
-{% extends "base_bootstrap.html" %}
+<%- include('header_bootstrap', {title: 'Meu Perfil - ' + user.nome}) %>
 
-{% block title %}Meu Perfil - {{ user.nome }}{% endblock %}
-
-{% block header %}
-<div class="topbar">
-    <div class="topbar-title">
-        <h1>Meu Perfil</h1>
-        <p>Visualize e gerencie suas informações pessoais</p>
-    </div>
-</div>
-{% endblock %}
-
-{% block content %}
+<div class="row">
 <style>
 .profile-container {
     height: calc(100vh - 200px);
@@ -238,23 +227,23 @@
     <!-- Header do Perfil -->
     <div class="profile-header">
         <div class="profile-header-content">
-            <div class="profile-avatar">{{ user.nome[:2].upper() }}</div>
+            <div class="profile-avatar"><%= user.nome.substring(0, 2).toUpperCase() %></div>
             
             <div class="profile-info">
-                <div class="profile-name">{{ user.nome }}</div>
-                <div class="profile-role">{{ user.tipo_usuario }}</div>
+                <div class="profile-name"><%= user.nome %></div>
+                <div class="profile-role"><%= user.tipo_usuario %></div>
                 
                 <div class="profile-stats">
                     <div class="stat-item">
-                        <div class="stat-value" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 300;">{{ user.equipe or 'N/A' }}</div>
+                        <div class="stat-value" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 300;"><%= user.equipe || 'N/A' %></div>
                         <div class="stat-label" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 400;">Equipe</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-value" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 300;">{{ user.area or 'N/A' }}</div>
+                        <div class="stat-value" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 300;"><%= user.area || 'N/A' %></div>
                         <div class="stat-label" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 400;">Área</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-value" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 300;">{{ user.especialidade or 'N/A' }}</div>
+                        <div class="stat-value" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 300;"><%= user.especialidade || 'N/A' %></div>
                         <div class="stat-label" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 400;">Especialidade</div>
                     </div>
                 </div>
@@ -274,23 +263,23 @@
             <div class="card-body">
                 <div class="info-item">
                     <span class="info-label">Nome Completo</span>
-                    <span class="info-value">{{ user.nome }}</span>
+                    <span class="info-value"><%= user.nome %></span>
                 </div>
                 <div class="info-item">
                     <span class="info-label">Email</span>
-                    <span class="info-value">{{ user.email }}</span>
+                    <span class="info-value"><%= user.email %></span>
                 </div>
                 <div class="info-item">
                     <span class="info-label">Tipo de Usuário</span>
                     <span class="info-value">
                         <span class="badge bg-light text-dark" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 500;">
-                            {{ user.tipo_usuario }}
+                            <%= user.tipo_usuario %>
                         </span>
                     </span>
                 </div>
                 <div class="info-item">
                     <span class="info-label" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 600;">Gestão</span>
-                    <span class="info-value" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 400;">{{ user.gestao or '-' }}</span>
+                    <span class="info-value" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 400;"><%= user.gestao || '-' %></span>
                 </div>
             </div>
         </div>
@@ -307,37 +296,37 @@
                 <div class="info-item">
                     <span class="info-label" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 600;">Área</span>
                     <span class="info-value" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 400;">
-                        {% if user.area == 'Campo' %}
-                            <span class="badge bg-light text-dark" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 500;">{{ user.area }}</span>
-                        {% else %}
-                            {{ user.area or '-' }}
-                        {% endif %}
+                        <% if (user.area === 'Campo') { %>
+                            <span class="badge bg-light text-dark" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 500;"><%= user.area %></span>
+                        <% } else { %>
+                            <%= user.area || '-' %>
+                        <% } %>
                     </span>
                 </div>
                 <div class="info-item">
                     <span class="info-label" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 600;">Equipe</span>
                     <span class="info-value" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 400;">
-                        {% if user.equipe == 'Auditoria' %}
-                            <span class="badge bg-light text-dark" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 500;">{{ user.equipe }}</span>
-                        {% elif user.equipe == 'Inspeção' %}
-                            <span class="badge bg-light text-dark" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 500;">{{ user.equipe }}</span>
-                        {% else %}
-                            {{ user.equipe or '-' }}
-                        {% endif %}
+                        <% if (user.equipe === 'Auditoria') { %>
+                            <span class="badge bg-light text-dark" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 500;"><%= user.equipe %></span>
+                        <% } else if (user.equipe === 'Inspeção') { %>
+                            <span class="badge bg-light text-dark" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 500;"><%= user.equipe %></span>
+                        <% } else { %>
+                            <%= user.equipe || '-' %>
+                        <% } %>
                     </span>
                 </div>
                 <div class="info-item">
                     <span class="info-label" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 600;">Especialidade</span>
                     <span class="info-value" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 400;">
-                        {% if user.especialidade == 'Auditoria' %}
-                            <span class="badge bg-light text-dark" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 500;">{{ user.especialidade }}</span>
-                        {% elif user.especialidade == 'Inspeção' %}
-                            <span class="badge bg-light text-dark" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 500;">{{ user.especialidade }}</span>
-                        {% elif user.especialidade == 'Campo' %}
-                            <span class="badge bg-light text-dark" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 500;">{{ user.especialidade }}</span>
-                        {% else %}
-                            {{ user.especialidade or '-' }}
-                        {% endif %}
+                        <% if (user.especialidade === 'Auditoria') { %>
+                            <span class="badge bg-light text-dark" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 500;"><%= user.especialidade %></span>
+                        <% } else if (user.especialidade === 'Inspeção') { %>
+                            <span class="badge bg-light text-dark" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 500;"><%= user.especialidade %></span>
+                        <% } else if (user.especialidade === 'Campo') { %>
+                            <span class="badge bg-light text-dark" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 500;"><%= user.especialidade %></span>
+                        <% } else { %>
+                            <%= user.especialidade || '-' %>
+                        <% } %>
                     </span>
                 </div>
             </div>
@@ -354,19 +343,19 @@
         </div>
         
         <div class="card-body">
-            {% if message %}
+            <% if (typeof message !== 'undefined') { %>
             <div class="alert alert-success">
                 <i class="bi bi-check-circle-fill me-2"></i>
-                {{ message }}
+                <%= message %>
             </div>
-            {% endif %}
+            <% } %>
             
-            {% if error %}
+            <% if (typeof error !== 'undefined') { %>
             <div class="alert alert-danger">
                 <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                {{ error }}
+                <%= error %>
             </div>
-            {% endif %}
+            <% } %>
             
             <form method="post" action="/perfil">
                 <div class="row g-3">
@@ -408,4 +397,5 @@
         </div>
     </div>
 </div>
-{% endblock %}
+</div>
+<%- include('footer_bootstrap') %>

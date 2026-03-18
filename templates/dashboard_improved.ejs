@@ -1,46 +1,40 @@
-{% extends "base_bootstrap.html" %}
+<%- include('header_bootstrap', {title: 'Dashboard - ' + user.nome}) %>
 
-{% block title %}Dashboard - {{ user.nome }}{% endblock %}
-
-{% block header %}
 <div class="topbar">
     <div class="topbar-title">
         <h1>Dashboard</h1>
-        <p>Bem-vindo(a) de volta, {{ user.nome }}!</p>
+        <p>Bem-vindo(a) de volta, <%= user.nome %>!</p>
     </div>
 </div>
-{% endblock %}
-
-{% block content %}
 <!-- Estatísticas do Dashboard -->
 <div class="stats-grid mb-4">
-    <div class="stat-card primary">
-        <div class="stat-icon">
+    <div class="stat-card" style="border-left: 5px solid #8b0000;">
+        <div class="stat-icon" style="background: #8b0000;">
             <i class="bi bi-clipboard-data"></i>
         </div>
         <div class="stat-content">
-            <div class="stat-value" id="today-launches-count">0</div>
-            <div class="stat-label">Lançamentos Hoje</div>
+            <div class="stat-value" id="today-launches-count"><%= typeof todayCount !== 'undefined' ? todayCount : 0 %></div>
+            <div class="stat-label">LANÇAMENTOS HOJE</div>
         </div>
     </div>
     
-    <div class="stat-card success">
-        <div class="stat-icon">
+    <div class="stat-card" style="border-left: 5px solid #16A34A;">
+        <div class="stat-icon" style="background: #16A34A;">
             <i class="bi bi-clock"></i>
         </div>
         <div class="stat-content">
             <div class="stat-value" id="today-hours-count">0.0</div>
-            <div class="stat-label">Horas Hoje</div>
+            <div class="stat-label">HORAS HOJE</div>
         </div>
     </div>
     
-    <div class="stat-card info">
-        <div class="stat-icon">
+    <div class="stat-card" style="border-left: 5px solid #2563EB;">
+        <div class="stat-icon" style="background: #2563EB;">
             <i class="bi bi-clock-history"></i>
         </div>
         <div class="stat-content">
-            <div class="stat-value" id="pending-hours">0.0</div>
-            <div class="stat-label">Horas Pendentes</div>
+            <div class="stat-value" id="pending-hours">9.0</div>
+            <div class="stat-label">HORAS PENDENTES</div>
         </div>
     </div>
 </div>
@@ -57,11 +51,11 @@
                 <p class="card-description">Seus lançamentos do dia de hoje</p>
             </div>
             <div class="d-flex gap-2">
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newLancamentoModal">
+                <button class="btn" style="background-color: #A00000; color: white; border-radius: 8px; font-weight: 500;" data-bs-toggle="modal" data-bs-target="#newLancamentoModal">
                     <i class="bi bi-plus-circle me-1"></i>
                     Novo Lançamento
                 </button>
-                <a href="/lancamentos" class="btn btn-outline-secondary">
+                <a href="/lancamentos" class="btn" style="background-color: #f8f9fa; color: #444; border: 1px solid #ddd; border-radius: 8px; font-weight: 500;">
                     <i class="bi bi-list-ul me-1"></i>
                     Ver Todos
                 </a>
@@ -69,7 +63,7 @@
         </div>
     </div>
 
-    {% if lancamentos %}
+    <% if (typeof recentLancamentos !== 'undefined' && recentLancamentos.length > 0) { %>
     <div class="table-responsive">
         <table class="table table-hover align-middle">
             <thead>
@@ -84,24 +78,24 @@
                 </tr>
             </thead>
             <tbody>
-                {% for lancamento in lancamentos %}
+                <% recentLancamentos.forEach(function(lancamento) { %>
                 <tr>
                     <td>
-                        <span class="badge bg-light text-dark">{{ lancamento.data.strftime('%d/%m/%Y') }}</span>
+                        <span class="badge bg-light text-dark"><%= new Date(lancamento.data).toLocaleDateString('pt-BR') %></span>
                     </td>
-                    <td>{{ lancamento.hora_inicio.strftime('%H:%M') }}</td>
-                    <td>{{ lancamento.hora_fim.strftime('%H:%M') }}</td>
+                    <td><%= lancamento.hora_inicio %></td>
+                    <td><%= lancamento.hora_fim %></td>
                     <td>
                         <div class="d-flex align-items-center gap-2">
-                            <span class="badge bg-primary">{{ lancamento.atividade.nome }}</span>
-                            <small class="text-muted">{{ lancamento.atividade.categoria.nome }}</small>
+                            <span class="badge bg-primary"><%= lancamento.Atividade ? lancamento.Atividade.nome : 'Atividade' %></span>
+                            <small class="text-muted"><%= (lancamento.Atividade && lancamento.Atividade.Categoria) ? lancamento.Atividade.Categoria.nome : '' %></small>
                         </div>
                     </td>
                     <td>
-                        <small class="text-muted">{{ lancamento.observacao|default('-') }}</small>
+                        <small class="text-muted"><%= lancamento.descricao || '-' %></small>
                     </td>
                     <td>
-                        <span class="badge bg-success">{{ "%.1f"|format(lancamento.duracao_horas) }}h</span>
+                        <span class="badge bg-success"><%= typeof lancamento.duracao_horas !== 'undefined' ? lancamento.duracao_horas.toFixed(1) : '0.0' %>h</span>
                     </td>
                     <td>
                         <div class="btn-group" role="group">
@@ -109,31 +103,31 @@
                                    data-bs-toggle="tooltip" 
                                    data-bs-placement="top" 
                                    title="Editar lançamento"
-                                   data-id="{{ lancamento.id }}"
-                                   data-data="{{ lancamento.data.strftime('%Y-%m-%d') }}"
-                                   data-inicio="{{ lancamento.hora_inicio.strftime('%H:%M') }}"
-                                   data-fim="{{ lancamento.hora_fim.strftime('%H:%M') }}"
-                                   data-atividade="{{ lancamento.atividade.id }}"
-                                   data-observacao="{{ lancamento.observacao|default('') }}"
-                                   onclick="openEditModal('{{ lancamento.id }}')">
+                                   data-id="<%= lancamento.id %>"
+                                   data-data="<%= new Date(lancamento.data).toISOString().split('T')[0] %>"
+                                   data-inicio="<%= (typeof lancamento.hora_inicio === 'string') ? lancamento.hora_inicio : '' %>"
+                                   data-fim="<%= (typeof lancamento.hora_fim === 'string') ? lancamento.hora_fim : '' %>"
+                                   data-atividade="<%= lancamento.Atividade ? lancamento.Atividade.id : (lancamento.atividade ? lancamento.atividade.id : '') %>"
+                                   data-observacao="<%= lancamento.observacao || '' %>"
+                                   onclick="openEditModal('<%= lancamento.id %>')">
                                 <i class="bi bi-pencil"></i>
                             </button>
                             <button class="btn btn-sm btn-outline-danger delete-btn-caneta" 
                                     data-bs-toggle="tooltip" 
                                     data-bs-placement="top" 
                                     title="Excluir lançamento"
-                                    data-id="{{ lancamento.id }}"
-                                   onclick="deleteLancamento('{{ lancamento.id }}')">
+                                    data-id="<%= lancamento.id %>"
+                                   onclick="deleteLancamento('<%= lancamento.id %>')">
                                 <i class="bi bi-trash"></i>
                             </button>
                         </div>
                     </td>
                 </tr>
-                {% endfor %}
+                <% }); %>
             </tbody>
         </table>
     </div>
-    {% else %}
+    <% } else { %>
     <div class="card-body text-center py-5">
         <div class="empty-state">
             <div class="empty-state-icon">
@@ -143,15 +137,15 @@
             <div class="empty-state-description">
                 Você ainda não possui lançamentos de atividades registrados.
             </div>
-            {% if user.tipo_usuario != "Admin" %}
+            <% if (user.tipo_usuario !== "Admin") { %>
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newLancamentoModal">
                 <i class="bi bi-plus-circle me-1"></i>
                 Adicionar Primeira Atividade
             </button>
-            {% endif %}
+            <% } %>
         </div>
     </div>
-    {% endif %}
+    <% } %>
 </div>
 
 <!-- New Lancamento Modal -->
@@ -175,7 +169,7 @@
                                 <i class="bi bi-calendar3 me-1"></i>Data
                             </label>
                             <input type="date" id="modal_data" name="data" class="form-control" 
-                                   value="{{ '2026-03-13' }}" required>
+                                   value="<%= new Date().toISOString().split('T')[0] %>" required>
                             <div class="invalid-feedback">
                                 Por favor, selecione uma data.
                             </div>
@@ -210,11 +204,13 @@
                         </label>
                         <select id="modal_atividade_id" name="atividade_id" class="form-select" required>
                             <option value="">Selecione uma atividade</option>
-                            {% for atividade in atividades %}
-                            <option value="{{ atividade.id }}">
-                                {{ atividade.nome }} ({{ atividade.categoria.nome }})
-                            </option>
-                            {% endfor %}
+                            <% if (typeof atividades !== 'undefined') { %>
+                                <% atividades.forEach(function(atividade) { %>
+                                <option value="<%= atividade.id %>">
+                                    <%= atividade.nome %> (<%= (atividade.Categoria) ? atividade.Categoria.nome : '' %>)
+                                </option>
+                                <% }); %>
+                            <% } %>
                         </select>
                         <div class="invalid-feedback">
                             Por favor, selecione uma atividade.
@@ -312,13 +308,15 @@
                         <label for="edit_atividade_id" class="form-label">
                             <i class="bi bi-list-task me-1"></i>Atividade
                         </label>
-                        <select id="edit_atividade_id" name="atividade_id" class="form-select" required>
+                        <select id="edit_atividade_id" name="edit_atividade_id" class="form-select" required>
                             <option value="">Selecione uma atividade</option>
-                            {% for atividade in atividades %}
-                            <option value="{{ atividade.id }}">
-                                {{ atividade.nome }} ({{ atividade.categoria.nome }})
-                            </option>
-                            {% endfor %}
+                            <% if (typeof atividades !== 'undefined') { %>
+                                <% atividades.forEach(function(atividade) { %>
+                                <option value="<%= atividade.id %>">
+                                    <%= atividade.nome %> (<%= (atividade.Categoria) ? atividade.Categoria.nome : '' %>)
+                                </option>
+                                <% }); %>
+                            <% } %>
                         </select>
                         <div class="invalid-feedback">
                             Por favor, selecione uma atividade.
@@ -397,9 +395,9 @@
         </div>
     </div>
 </div>
-{% endblock %}
+</div>
 
-{% block extra_css %}
+
 <style>
 /* Stats Grid */
 .stats-grid {
@@ -458,54 +456,14 @@
 
 .stat-card {
     background: white;
-    border-radius: 16px;
+    border-radius: 20px;
     padding: 24px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     border: 1px solid #f0f0f0;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: transform 0.3s ease;
     display: flex;
     align-items: center;
-    gap: 16px;
-}
-
-.stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-}
-
-.stat-card.primary {
-    border-left: 4px solid var(--bs-primary);
-}
-
-.stat-card.success {
-    border-left: 4px solid var(--bs-success);
-}
-
-.stat-card.info {
-    border-left: 4px solid #ffc107;
-    background: white;
-}
-
-.stat-card.info .stat-icon {
-    background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
-}
-
-.stat-card.info.warning {
-    border-left: 4px solid #ff6b35;
-    background: linear-gradient(135deg, #ffe5d9 0%, #ffccbc 100%);
-}
-
-.stat-card.info.warning .stat-icon {
-    background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
-}
-
-.stat-card.info.success {
-    border-left: 4px solid var(--bs-success);
-    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-}
-
-.stat-card.info.success .stat-icon {
-    background: linear-gradient(135deg, var(--bs-success) 0%, #198754 100%);
+    gap: 20px;
 }
 
 .stat-icon {
@@ -515,21 +473,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     color: white;
     flex-shrink: 0;
-}
-
-.stat-card.primary .stat-icon {
-    background: linear-gradient(135deg, var(--bs-primary) 0%, var(--bs-primary-dark, #660000) 100%);
-}
-
-.stat-card.success .stat-icon {
-    background: linear-gradient(135deg, var(--bs-success) 0%, #198754 100%);
-}
-
-.stat-card.info .stat-icon {
-    background: linear-gradient(135deg, var(--bs-info) 0%, #0dcaf0 100%);
 }
 
 .stat-content {
@@ -623,34 +569,44 @@
     letter-spacing: 0.5px;
 }
 
-/* Time Picker Input */
-.time-picker-input {
-    cursor: pointer;
-    background: white;
+/* Table Refinements */
+.table thead th {
+    background-color: #f1f4f9;
+    color: #555;
+    font-weight: 600;
+    text-transform: none;
+    font-size: 0.85rem;
+    padding: 12px 16px;
+    border-bottom: 2px solid #eef2f7;
 }
 
-.time-picker-input:hover {
-    background-color: var(--bs-gray-100);
+.table tbody td {
+    padding: 14px 16px;
+    vertical-align: middle;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .stat-badge {
-        flex-direction: column;
-        text-align: center;
-        gap: 8px;
-    }
-    
-    .stat-badge-icon {
-        width: 50px;
-        height: 50px;
-        font-size: 20px;
-    }
+.badge {
+    padding: 6px 12px;
+    font-weight: 500;
+    border-radius: 6px;
+}
+
+/* Card Improvements */
+.card {
+    border: none;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.card-title {
+    font-weight: 700;
+    color: #333;
 }
 </style>
-{% endblock %}
 
-{% block extra_js %}
+
+
 <script src="/static/js/notifications.js"></script>
 <script>
 // Calculate and display duration
@@ -1251,4 +1207,4 @@ function showNotification(message, type = 'info') {
     }, 5000);
 }
 </script>
-{% endblock %}
+<%- include('footer_bootstrap') %>

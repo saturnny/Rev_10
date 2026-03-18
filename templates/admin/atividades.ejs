@@ -1,8 +1,5 @@
-{% extends "base_bootstrap.html" %}
+<%- include('../header_bootstrap', {title: 'Gerenciar Atividades - ' + user.nome}) %>
 
-{% block title %}Gerenciar Atividades - {{ user.nome }}{% endblock %}
-
-{% block header %}
 <div class="topbar">
     <div class="topbar-title">
         <h1>Gerenciamento de Atividades</h1>
@@ -15,9 +12,6 @@
         </button>
     </div>
 </div>
-{% endblock %}
-
-{% block content %}
 <style>
 .activity-card {
     border: none;
@@ -46,24 +40,25 @@
 
 <!-- Lista de Atividades -->
 <div class="row">
-    {% for atividade in atividades %}
+    <% if (typeof atividades !== 'undefined') { %>
+        <% atividades.forEach(function(atividade) { %>
     <div class="col-md-6 col-lg-4 mb-3">
         <div class="card activity-card h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h5 class="card-title mb-0">{{ atividade.nome }}</h5>
+                    <h5 class="card-title mb-0"><%= atividade.nome %></h5>
                     <div class="dropdown">
                         <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
                             <i class="bi bi-three-dots"></i>
                         </button>
                         <ul class="dropdown-menu">
                             <li>
-                                <button class="dropdown-item btn-action" data-bs-toggle="modal" data-bs-target="#editModal{{ atividade.id }}">
+                                <button class="dropdown-item btn-action" data-bs-toggle="modal" data-bs-target="#editModal<%= atividade.id %>">
                                     <i class="bi bi-pencil me-1"></i> Editar
                                 </button>
                             </li>
                             <li>
-                                <form method="post" action="/admin/atividades/{{ atividade.id }}/excluir" style="display: inline;">
+                                <form method="post" action="/admin/atividades/<%= atividade.id %>/excluir" style="display: inline;">
                                     <button type="submit" class="dropdown-item text-danger btn-action" onclick="return confirm('Tem certeza que deseja excluir esta atividade?')">
                                         <i class="bi bi-trash me-1"></i> Excluir
                                     </button>
@@ -75,26 +70,27 @@
                 <div class="mb-2">
                     <span class="badge bg-secondary category-badge">
                         <i class="bi bi-tag me-1"></i>
-                        {{ atividade.categoria.nome if atividade.categoria else 'Sem categoria' }}
+                        <%= (atividade.Categoria) ? atividade.Categoria.nome : 'Sem categoria' %>
                     </span>
                 </div>
                 <small class="text-muted">
                     <i class="bi bi-calendar3 me-1"></i>
-                    Criado em {{ atividade.created_at.strftime('%d/%m/%Y') if atividade.created_at else 'N/A' }}
+                    Criado em <%= (atividade.created_at) ? new Date(atividade.created_at).toLocaleDateString('pt-BR') : 'N/A' %>
                 </small>
             </div>
         </div>
     </div>
-    {% endfor %}
+    <% }); %>
+    <% } %>
 </div>
 
-{% if not atividades %}
+<% if (typeof atividades === 'undefined' || atividades.length === 0) { %>
 <div class="text-center py-5">
     <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
     <h4 class="text-muted mt-3">Nenhuma atividade encontrada</h4>
     <p class="text-muted">Clique em "Nova Atividade" para começar.</p>
 </div>
-{% endif %}
+<% } %>
 
 <!-- Modal Nova Atividade -->
 <div class="modal fade" id="atividadeModal" tabindex="-1">
@@ -116,9 +112,11 @@
                     <div class="mb-3">
                         <label for="categoria_id" class="form-label">Categoria</label>
                         <select class="form-select" id="categoria_id" name="categoria_id">
-                            {% for categoria in categorias %}
-                            <option value="{{ categoria.id }}">{{ categoria.nome }}</option>
-                            {% endfor %}
+                            <% if (typeof categorias !== 'undefined') { %>
+                                <% categorias.forEach(function(categoria) { %>
+                            <option value="<%= categoria.id %>"><%= categoria.nome %></option>
+                                <% }); %>
+                            <% } %>
                         </select>
                     </div>
                 </div>
@@ -135,8 +133,9 @@
 </div>
 
 <!-- Modais de Edição -->
-{% for atividade in atividades %}
-<div class="modal fade" id="editModal{{ atividade.id }}" tabindex="-1">
+<% if (typeof atividades !== 'undefined') { %>
+    <% atividades.forEach(function(atividade) { %>
+<div class="modal fade" id="editModal<%= atividade.id %>" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -146,20 +145,22 @@
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="post" action="/admin/atividades/{{ atividade.id }}/editar">
+            <form method="post" action="/admin/atividades/<%= atividade.id %>/editar">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="nome{{ atividade.id }}" class="form-label">Nome da Atividade</label>
-                        <input type="text" class="form-control" id="nome{{ atividade.id }}" name="nome" value="{{ atividade.nome }}" required>
+                        <label for="nome<%= atividade.id %>" class="form-label">Nome da Atividade</label>
+                        <input type="text" class="form-control" id="nome<%= atividade.id %>" name="nome" value="<%= atividade.nome %>" required>
                     </div>
                     <div class="mb-3">
-                        <label for="categoria_id{{ atividade.id }}" class="form-label">Categoria</label>
-                        <select class="form-select" id="categoria_id{{ atividade.id }}" name="categoria_id">
-                            {% for categoria in categorias %}
-                            <option value="{{ categoria.id }}" {% if atividade.categoria and categoria.id == atividade.categoria.id %}selected{% endif %}>
-                                {{ categoria.nome }}
+                        <label for="categoria_id<%= atividade.id %>" class="form-label">Categoria</label>
+                        <select class="form-select" id="categoria_id<%= atividade.id %>" name="categoria_id">
+                            <% if (typeof categorias !== 'undefined') { %>
+                                <% categorias.forEach(function(categoria) { %>
+                            <option value="<%= categoria.id %>" <%= (atividade.Categoria && categoria.id === atividade.Categoria.id) ? 'selected' : '' %>>
+                                <%= categoria.nome %>
                             </option>
-                            {% endfor %}
+                                <% }); %>
+                            <% } %>
                         </select>
                     </div>
                 </div>
@@ -174,5 +175,6 @@
         </div>
     </div>
 </div>
-{% endfor %}
-{% endblock %}
+<% }); %>
+<% } %>
+<%- include('../footer_bootstrap') %>

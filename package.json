@@ -5,7 +5,10 @@
   "main": "api/index.js",
   "scripts": {
     "start": "node api/index.js",
-    "dev": "nodemon api/index.js"
+    "dev": "nodemon api/index.js",
+    "install-deps": "npm install",
+    "seed": "node seed_database.js",
+    "test-login": "node test_login.js"
   },
   "dependencies": {
     "express": "^4.18.2",
@@ -16,7 +19,11 @@
     "bcryptjs": "^2.4.3",
     "joi": "^17.9.2",
     "cookie-parser": "^1.4.6",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
   },
   "engines": {
     "node": "24.x"

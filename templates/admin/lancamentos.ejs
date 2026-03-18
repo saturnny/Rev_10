@@ -1,8 +1,4 @@
-{% extends "base_bootstrap.html" %}
-
-{% block title %}Lançamentos da Equipe - {{ user.nome }}{% endblock %}
-
-{% block content %}
+<%- include('../header_bootstrap', {title: 'Lançamentos da Equipe - ' + user.nome}) %>
 <div class="card">
     <div class="card-header">
         <h2>Lançamentos da Equipe</h2>
@@ -14,17 +10,19 @@
             <label for="user_id">Usuário:</label>
             <select id="user_id" name="user_id" class="form-control">
                 <option value="">Todos os usuários</option>
-                {% for usuario in usuarios %}
-                <option value="{{ usuario.id }}" {% if filtro_user_id == usuario.id %}selected{% endif %}>
-                    {{ usuario.nome }}
+                <% if (typeof usuarios !== 'undefined') { %>
+                    <% usuarios.forEach(function(usuario) { %>
+                <option value="<%= usuario.id %>" <%= (typeof filtro_user_id !== 'undefined' && filtro_user_id == usuario.id) ? 'selected' : '' %>>
+                    <%= usuario.nome %>
                 </option>
-                {% endfor %}
+                    <% }); %>
+                <% } %>
             </select>
         </div>
 
         <div class="form-group">
             <label for="data">Data:</label>
-            <input type="date" id="data" name="data" class="form-control" value="{{ filtro_data or '' }}">
+            <input type="date" id="data" name="data" class="form-control" value="<%= (typeof filtro_data !== 'undefined') ? filtro_data : '' %>">
         </div>
 
         <div class="form-group" style="display: flex; align-items: flex-end;">
@@ -33,7 +31,7 @@
         </div>
     </form>
 
-    {% if lancamentos %}
+    <% if (typeof lancamentos !== 'undefined' && lancamentos.length > 0) { %>
     <table class="table">
         <thead>
             <tr>
@@ -47,29 +45,29 @@
             </tr>
         </thead>
         <tbody>
-            {% for lancamento in lancamentos %}
+            <% lancamentos.forEach(function(lancamento) { %>
             <tr>
-                <td>{{ lancamento.usuario.nome }}</td>
-                <td>{{ lancamento.data.strftime('%d/%m/%Y') }}</td>
-                <td>{{ lancamento.hora_inicio.strftime('%H:%M') }}</td>
-                <td>{{ lancamento.hora_fim.strftime('%H:%M') }}</td>
-                <td>{{ lancamento.atividade.nome }}</td>
-                <td>{{ lancamento.observacao or '-' }}</td>
-                <td>{{ "%.1f"|format(lancamento.duracao_horas) }}h</td>
+                <td><%= (lancamento.Usuario) ? lancamento.Usuario.nome : (lancamento.usuario ? lancamento.usuario.nome : '-') %></td>
+                <td><%= (lancamento.data) ? new Date(lancamento.data).toLocaleDateString('pt-BR') : '-' %></td>
+                <td><%= (lancamento.hora_inicio) ? lancamento.hora_inicio : '-' %></td>
+                <td><%= (lancamento.hora_fim) ? lancamento.hora_fim : '-' %></td>
+                <td><%= (lancamento.Atividade) ? lancamento.Atividade.nome : (lancamento.atividade ? lancamento.atividade.nome : '-') %></td>
+                <td><%= lancamento.observacao || '-' %></td>
+                <td><%= (lancamento.duracao_horas || 0).toFixed(1) %>h</td>
             </tr>
-            {% endfor %}
+            <% }); %>
         </tbody>
     </table>
     
     <div style="margin-top: 2rem; padding: 1rem; background-color: #f8f9fa; border-radius: 5px;">
         <h4>Resumo</h4>
-        <p><strong>Total de Lançamentos:</strong> {{ lancamentos|length }}</p>
-        <p><strong>Total de Horas:</strong> {{ "%.1f"|format(lancamentos|sum(attribute='duracao_horas')) }}h</p>
+        <p><strong>Total de Lançamentos:</strong> <%= lancamentos.length %></p>
+        <p><strong>Total de Horas:</strong> <%= lancamentos.reduce((acc, curr) => acc + (parseFloat(curr.duracao_horas) || 0), 0).toFixed(1) %>h</p>
     </div>
-    {% else %}
+    <% } else { %>
     <div style="text-align: center; padding: 2rem; color: #666;">
         <p>Nenhum lançamento encontrado com os filtros selecionados.</p>
     </div>
-    {% endif %}
+    <% } %>
 </div>
-{% endblock %}
+<%- include('../footer_bootstrap') %>

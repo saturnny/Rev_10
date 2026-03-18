@@ -1,8 +1,5 @@
-{% extends "base_bootstrap.html" %}
+<%- include('../header_bootstrap', {title: 'Gerenciar Categorias - ' + user.nome}) %>
 
-{% block title %}Gerenciar Categorias - {{ user.nome }}{% endblock %}
-
-{% block header %}
 <div class="topbar">
     <div class="topbar-title">
         <h1>Gerenciamento de Categorias</h1>
@@ -15,9 +12,6 @@
         </button>
     </div>
 </div>
-{% endblock %}
-
-{% block content %}
 <style>
 .category-card {
     border: none;
@@ -68,20 +62,21 @@
 
 <!-- Lista de Categorias -->
 <div class="row">
-    {% for categoria in categorias %}
+    <% if (typeof categorias !== 'undefined') { %>
+        <% categorias.forEach(function(categoria) { %>
     <div class="col-md-6 col-lg-4 mb-3">
         <div class="card category-card h-100">
             <div class="card-body text-center">
                 <div class="category-icon primary">
                     <i class="bi bi-folder"></i>
                 </div>
-                <h5 class="card-title">{{ categoria.nome }}</h5>
+                <h5 class="card-title"><%= categoria.nome %></h5>
                 <small class="text-muted">
                     <i class="bi bi-calendar3 me-1"></i>
-                    Criado em {{ categoria.created_at.strftime('%d/%m/%Y') if categoria.created_at else 'N/A' }}
+                    Criado em <%= (categoria.created_at) ? new Date(categoria.created_at).toLocaleDateString('pt-BR') : 'N/A' %>
                 </small>
                 <div class="mt-3">
-                    <form method="post" action="/admin/categorias/{{ categoria.id }}/excluir" style="display: inline;">
+                    <form method="post" action="/admin/categorias/<%= categoria.id %>/excluir" style="display: inline;">
                         <button type="submit" class="btn btn-sm btn-outline-danger btn-action" onclick="return confirm('Tem certeza que deseja excluir esta categoria?')">
                             <i class="bi bi-trash me-1"></i> Excluir
                         </button>
@@ -90,16 +85,17 @@
             </div>
         </div>
     </div>
-    {% endfor %}
+    <% }); %>
+    <% } %>
 </div>
 
-{% if not categorias %}
+<% if (typeof categorias === 'undefined' || categorias.length === 0) { %>
 <div class="text-center py-5">
     <i class="bi bi-folder-x text-muted" style="font-size: 3rem;"></i>
     <h4 class="text-muted mt-3">Nenhuma categoria encontrada</h4>
     <p class="text-muted">Clique em "Nova Categoria" para começar.</p>
 </div>
-{% endif %}
+<% } %>
 
 <!-- Modal Nova Categoria -->
 <div class="modal fade" id="categoriaModal" tabindex="-1">
@@ -130,4 +126,4 @@
         </div>
     </div>
 </div>
-{% endblock %}
+<%- include('../footer_bootstrap') %>

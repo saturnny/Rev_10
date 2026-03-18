@@ -2,6 +2,7 @@
  * Database Configuration - Sequelize
  * Time Tracking System - Node.js Version
  */
+require('dotenv').config();
 const { Sequelize } = require('sequelize');
 
 // Database connection
